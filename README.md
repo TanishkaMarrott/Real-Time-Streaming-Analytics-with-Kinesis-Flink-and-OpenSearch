@@ -1,7 +1,7 @@
 # Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 
 ## Introduction
-This is a Real-time Streaming Data Pipeline, encompassing various components and functionalities beyond mere data processing. This integrates data processing with data ingestion, transformation, storage, analysis, and visualization, creating a robust end-to-end solution for handling NYC Taxi Fleet Telemetry data.
+This is a real-time streaming data pipeline, encompassing various components and functionalities beyond mere data processing. This integrates data processing with data ingestion, transformation, storage, analysis, and visualization, creating a robust end-to-end solution for handling NYC Taxi Fleet Telemetry data.
 
 
 ## Key Features
