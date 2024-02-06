@@ -1,19 +1,8 @@
-# Streamlining-Data-Workflow-with-MWAA-and-dbt-Orchestration
-This project utilizes Managed Apache Airflow (MWAA) and dbt to create an end-to-end solution to orchestrate a data ingestion and transformation pipeline.
-MWAA orchestrates workflows while dbt transforms data, enabling efficient, scalable, and reliable data processing within a streamlined framework.
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Key Features](#key-features)
-3. [Usage](#usage)
-4. [Contributing](#contributing)
-5. [License](#license)
-6. [Additional Resources](#additional-resources)
+# Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 
 ## Introduction
+This is a Real-time Streaming Data Pipeline, encompassing various components and functionalities beyond mere data processing. This integrates data processing with data ingestion, transformation, storage, analysis, and visualization, creating a robust end-to-end solution for handling NYC Taxi Fleet Telemetry data.
 
-Brief overview of the project and its objectives.
 
 ## Key Features
 
