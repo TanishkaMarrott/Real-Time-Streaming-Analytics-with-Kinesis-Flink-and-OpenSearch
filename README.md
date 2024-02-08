@@ -1,7 +1,7 @@
 # Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 
 ## Introduction
-This is a real-time streaming data pipeline, wherein we've integrated Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. This has been tailored for building scalable, resilient pipelines for real-time data processing and analytics, leveraging AWS services like Kinesis, Lambda, Glue, and OpenSearch.
+This is a Real-time Streaming data pipeline, wherein we've integrated Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. This has been tailored for building scalable, resilient pipelines for real-time data processing and analytics, leveraging AWS services like Kinesis, Lambda, Glue, and OpenSearch.
 
 
 ## Environment Setup
