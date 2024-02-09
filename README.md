@@ -7,17 +7,21 @@ This is a Real-time Streaming data pipeline, wherein we've integrated Data Proce
 ## Environment Setup
 The CF template defined above comprises the resources we'd need before starting off with our project:-
 
-Virtual Private Cloud (VPC): 
-Includes tailored security groups for your Cloud9 Instance, facilitating secure development and testing environments.
+**_VPC:_**
 
-Cloud9 Instance: 
-An m5.large instance configured with Amazon Linux 2, serving as an integrated development environment (IDE) for exploring Kinesis Client Library and code.
+Includes Security Groups for the Cloud9 Instance - for secure Development & Testing Environments.
 
-S3 Buckets:
-Two buckets, one for storing the original Taxi Trip dataset and another for receiving curated data from the Kinesis Data Firehose lab.
+**_Cloud9 Instance:_**
 
-Glue Database:
-A database setup within AWS Glue, providing a centralized repository for Kinesis Data Analytics Studio application source and target tables.
+An t3.medium instance configured with Amazon Linux 2 - Serving as an IDE for exploring Kinesis Client Library & code.
+
+**_S3 Buckets:_**
+
+Two buckets, one for storing the original Taxi Trip dataset,  another for receiving curated data from the Kinesis Data Firehose.
+
+**_Glue Database:_**
+
+A database setup within AWS Glue - Centralized Repository for Kinesis Data Analytics Studio application source & target tables.
 
 Kinesis Analytics Role: 
 An IAM role with fine-grained permissions for Kinesis Analytics operations, ensuring secure access and execution.
