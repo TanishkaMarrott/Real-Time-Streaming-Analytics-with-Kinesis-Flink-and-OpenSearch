@@ -13,36 +13,42 @@ There's been a strong emphasis on Design Considerations that align with the over
 
 
 _**AWS Service Utilised:-**_ 
+
 Kinesis Data Streams
 
 _**Primary Objective:-**-_
+
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
+</br>
 
 #### **_Key Design Considerations made:-_**
 
+
 _**a) Data Injection Mechanism:-**_ 
 
- Leveraged Kinesis Producer Library for constructing our Data Producers.
+&nbsp; &nbsp; Leveraged Kinesis Producer Library for constructing our Data Producers.
 
-Simplifies the process via - 
+&nbsp; &nbsp; Simplifies the process via - 
 
-1 - _Aggregating multiple records into a single PUT request_  &nbsp; &rarr; &nbsp;  Reduces operational overhead & improves throughput.
+&nbsp; &nbsp; 1) _Aggregating multiple records into a single PUT request_  &nbsp; &rarr; &nbsp; Reduces operational overhead & improves throughput.
 
-2 - _Decoupling the Data Production Logic from Stream Interaction_ &nbsp;  &rarr;  &nbsp; This actually makes Request handling asynchronous, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions (Response received on receipt of Data)
+&nbsp; &nbsp; 2) _Decoupling the Data Production Logic from Stream Interaction_ &nbsp;  &rarr;  &nbsp; This actually makes Request handling asynchronous, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions (Response received on receipt of Data)
 
-3 - _Graceful Error handling via a retry logic_ &nbsp;  &rarr; &nbsp;  We can define the criterion for subsequent retry attempts upon failure, for more resilence and reliability. 
+&nbsp; &nbsp; 3) _Graceful Error handling via a retry logic_ &nbsp;  &rarr; &nbsp;  We can define the criterion for subsequent retry attempts upon failure, for more resilence and reliability. 
 
-4 - Data Compression to reduce the amount of data transmitted over the network &nbsp; &rarr;  &nbsp; Optimizing bandwidth usage and reducing costs.
+&nbsp; &nbsp; 4) _Data Compression to reduce the amount of data transmitted:_ &nbsp; &rarr;  &nbsp; Optimizing bandwidth usage and reducing costs.
 
-5 - Collecting metrics with regards to Data production & Stream Interaction 
+&nbsp; &nbsp; 5) _Collecting Metrics with regards to Data production & Stream Interaction:-_
 
-&nbsp; &nbsp; &rarr; Data production metrics, primarily the ones related to volume of data generated, number of records per unit time -> Aids in estimating the capacity to be provisioned, 
+&nbsp; &nbsp; &nbsp; &nbsp; &rarr; Data production metrics, primarily the ones related to volume of data generated, number of records per unit time -> Aids in estimating the capacity to be provisioned, 
 
-&nbsp; &nbsp; &rarr; Stream Interaction metrics (Eg. Latency in processing Data) helps in identifying events of performance degradation. Providing insights into the performance and health of the data ingestion process.
+&nbsp; &nbsp; &nbsp; &nbsp; &rarr; Stream Interaction metrics (Eg. Latency in processing Data) helps in identifying events of performance degradation. Providing insights into the performance and health of the data ingestion process.
 
 _**b) Capacity Mode:-**_
-I've used the On-demand Capacity Mode for KDS, since my Data Stream's throughtput requirements are not yet defined, They're unpredictable and variable.
-With the On-Demand Mode, the Data Stream's Capacity scales automatically.
+
+I've opted for the On-demand Capacity Mode for Kinesis Data Streams due to the unpredictable and variable nature of my data stream's throughput requirements. With this mode, the capacity of the data stream scales automatically based on the incoming data volume, ensuring that I don't need to predefine or manage shard capacities.
+
+This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
 
 ## Setting up the Environment for Kinesis
 
