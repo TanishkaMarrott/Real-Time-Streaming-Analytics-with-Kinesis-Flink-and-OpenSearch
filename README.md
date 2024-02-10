@@ -1,35 +1,48 @@
 # Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
+----
 
-### Introduction
-This is a Real-time Streaming data pipeline, wherein we've integrated Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. This has been tailored for building scalable, resilient pipelines for real-time Data Processing and Analytics, leveraging AWS services - Kinesis, Lambda, Glue, OpenSearch
+## Setting the context
+This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch.
 
-----------------------------------
+There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
-### Phase I- Data Ingestion
+---
+## Project Workflow
+
+### Data Ingestion - Specifics
 
 
-_**AWS Service Used:-**_ 
+_**AWS Service Utilised:-**_ 
 Kinesis Data Streams
 
-_**Primary Purpose:**-_
-Purpose is to capture and ingest huge amounts of streaming data. It's core function revolves around ingesting substantial volumes of Real-time Streaming Data like Website clickstreams, IoT & Telemetry Data. Acts as a conduit between Data Producers and Data Consumers.
-</br>
+_**Primary Objective:-**-_
+Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 
-#### **_Architectural Design Considerations I've made:-_**
-</br>
+#### **_Key Design Considerations made:-_**
 
-_**a) Mechanism used to send Data into the KDS:-**_ 
+_**a) Data Injection Mechanism:-**_ 
 
-I've leveraged Kinesis Producer Library for constructing our Data Producers. 
-Not only does this simplify the process of producing data to the Kinesis streams, it significantly improves efficiency, reliability, and scalability. 
+ Leveraged Kinesis Producer Library for constructing our Data Producers.
 
-1 - Aggregating user records - packing multiple records into a single PUT request, reducing the overhead of PUT operations and improving throughput.
-2 - Optimising Bandwidth usage through Compression, 
+Simplifies the process via - 
+
+1 - _Aggregating multiple records into a single PUT request_  &nbsp; &rarr; &nbsp;  Reduces operational overhead & improves throughput.
+
+2 - _Decoupling the Data Production Logic from Stream Interaction_ &nbsp;  &rarr;  &nbsp; This actually makes Request handling asynchronous, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions (Response received on receipt of Data)
+
+3 - _Graceful Error handling via a retry logic_ &nbsp;  &rarr; &nbsp;  We can define the criterion for subsequent retry attempts upon failure, for more resilence and reliability. 
+
+4 - Data Compression to reduce the amount of data transmitted over the network &nbsp; &rarr;  &nbsp; Optimizing bandwidth usage and reducing costs.
+
+5 - Collecting metrics with regards to Data production & Stream Interaction 
+
+&nbsp; &nbsp; &rarr; Data production metrics, primarily the ones related to volume of data generated, number of records per unit time -> Aids in estimating the capacity to be provisioned, 
+
+&nbsp; &nbsp; &rarr; Stream Interaction metrics (Eg. Latency in processing Data) helps in identifying events of performance degradation. Providing insights into the performance and health of the data ingestion process.
 
 _**b) Capacity Mode:-**_
 I've used the On-demand Capacity Mode for KDS, since my Data Stream's throughtput requirements are not yet defined, They're unpredictable and variable.
 With the On-Demand Mode, the Data Stream's Capacity scales automatically.
-
 
 ## Setting up the Environment for Kinesis
 
