@@ -1,4 +1,3 @@
-<img width="957" alt="image" src="https://github.com/TanishkaMarrott/Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis/assets/78227704/14696afe-5ff8-4771-aa51-37c69dc2be2d"># Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 ----
 
 ## Setting the context
