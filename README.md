@@ -1,4 +1,4 @@
-# Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
+<img width="957" alt="image" src="https://github.com/TanishkaMarrott/Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis/assets/78227704/14696afe-5ff8-4771-aa51-37c69dc2be2d"># Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 ----
 
 ## Setting the context
@@ -17,7 +17,9 @@ Kinesis Data Streams
 
 _**Primary Objective-**_
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
+
 </br>
+
 
 --> <ins>**_Key Design Considerations I've Made_**</ins> 
 
@@ -45,20 +47,19 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 
 </br>
 
-***Kinesis Producer Codebase - What does it actually do?***
 
-- The Java program I've attached is a Kinesis Producer, aka it publishes records to the Kinesis Data Stream. It imports the necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
+<ins>***Kinesis Producer Codebase - What does it actually do?***</ins>
+
+- The Java program attached above is actually the Kinesis Producer Code, aka it publishes records to the Kinesis Data Stream. It imports the necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
 - It'll read and parse the CSV file comprising NYC Taxi Telemetry Data, & retrieve a list of Trip Objects
-- Next, I configure the Kinesis producer with specific parameters. We've fine-tuned Configuration Settings - Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. Creates a Kinesis producer instance based on the provided configuration. (More on this subsequently)
+- Next, I've configured the Kinesis Producer with specific parameters, fine-tuned Configuration Settings - Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. And then created a Kinesis producer instance based on the provided configuration. (More on this subsequently)
 - Iterates over the list of trips & converts each trip into JSON format, Wraps the JSON data into a ByteBuffer and asynchronously adds the user record to the specified Kinesis data stream.
-- Collects futures for each put operation to analyze results asynchronously.
-- Blocks to wait for put operations to finish and checks the results.
-- If the put operation is successful, it prints the shard ID where the record was put. And, if it fails, it prints out the attempts made along with their status.
+- The request handling is asynchronous, and hence the code collects futures for each put operation (Since this is an asynchronous computation), 
+  This means that the program continues to execute without waiting for each put operation to complete. Instead, it adds each put operation's future to a list for later analysis. This approach improves efficiency by allowing the program to continue processing data while concurrently handling the results of the put operations.
 
-This markdown format can be directly copied into a GitHub README file for clarity and organization.
+- _Here, future refers to a Java object, representing the result of an asynchronous computation. When you submit a task for execution asynchronously, you receive a Future object immediately, which you can use to track the status and retrieve the result of the computation later_
 
-
-
+- Lastly, it prints shard IDs for successful puts and attempts for failures.
 
 ## Setting up the Environment for Kinesis
 
