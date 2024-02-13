@@ -9,46 +9,56 @@ There's been a strong emphasis on Design Considerations that align with the over
 ---
 ## Project Workflow
 
-### Data Ingestion - Specifics
+### <ins>Data Ingestion - Specifics</ins>
 
 
-_**AWS Service Utilised:-**_ 
-
+_**AWS Service Utilised-**_ 
 Kinesis Data Streams
 
-_**Primary Objective:-**-_
-
+_**Primary Objective-**_
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 </br>
 
-#### **_Key Design Considerations made:-_**
+--> <ins>**_Key Design Considerations I've Made_**</ins> 
 
+_**a) Data Injection Mechanism**_ 
 
-_**a) Data Injection Mechanism:-**_ 
+  I've leveraged Kinesis Producer Library for constructing our Data Producers. 
+  Quick Breakdown:-
+  </br>
+  
 
-&nbsp; &nbsp; Leveraged Kinesis Producer Library for constructing our Data Producers.
+ | Feature                                                           | Description                                                                                                                                                                                  |
+|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+|  Aggregates multiple records into a single PUT request       | Reduces operational overhead & improves throughput.        |                                                                                                                                  |
+| Handles requests asynchronously  | Decouples the Data Production Logic from Stream Interaction, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions.          |
+|  Implements graceful Error Handling     | We can define the criterion for subsequent retry attempts upon failure, for more resilience and reliability.                                                                                 |
+|  Compresses data to reduce the amount of data transmitted   | Optimizes bandwidth usage and reducing costs.                                                                                                                                              |
+|  Collects Metrics with regards to Data production & Stream Interaction | - Data production metrics, primarily the ones related to volume of data generated, aiding in estimating the capacity to be provisioned. - Stream Interaction metrics (Ex- Latency in processing Data) help in providing insights into the performance and health of the data ingestion process. |
+</br>
 
-&nbsp; &nbsp; Simplifies the process via - 
+_**b) Capacity Mode**_
 
-&nbsp; &nbsp; 1) _Aggregating multiple records into a single PUT request_  &nbsp; &rarr; &nbsp; Reduces operational overhead & improves throughput.
-
-&nbsp; &nbsp; 2) _Decoupling the Data Production Logic from Stream Interaction_ &nbsp;  &rarr;  &nbsp; This actually makes Request handling asynchronous, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions (Response received on receipt of Data)
-
-&nbsp; &nbsp; 3) _Graceful Error handling via a retry logic_ &nbsp;  &rarr; &nbsp;  We can define the criterion for subsequent retry attempts upon failure, for more resilence and reliability. 
-
-&nbsp; &nbsp; 4) _Data Compression to reduce the amount of data transmitted:_ &nbsp; &rarr;  &nbsp; Optimizing bandwidth usage and reducing costs.
-
-&nbsp; &nbsp; 5) _Collecting Metrics with regards to Data production & Stream Interaction:-_
-
-&nbsp; &nbsp; &nbsp; &nbsp; &rarr; Data production metrics, primarily the ones related to volume of data generated, number of records per unit time -> Aids in estimating the capacity to be provisioned, 
-
-&nbsp; &nbsp; &nbsp; &nbsp; &rarr; Stream Interaction metrics (Eg. Latency in processing Data) helps in identifying events of performance degradation. Providing insights into the performance and health of the data ingestion process.
-
-_**b) Capacity Mode:-**_
-
-I've opted for the On-demand Capacity Mode for Kinesis Data Streams due to the unpredictable and variable nature of my data stream's throughput requirements. With this mode, the capacity of the data stream scales automatically based on the incoming data volume, ensuring that I don't need to predefine or manage shard capacities.
+I've opted for the _On-demand Capacity Mode_ for Kinesis Data Streams due to the unpredictable and variable nature of my data stream's throughput requirements. With this mode, the capacity of the data stream scales automatically based on the incoming data volume, ensuring that I don't need to predefine or manage shard capacities.
 
 This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
+
+</br>
+
+***Kinesis Producer Codebase - What does it actually do?***
+
+- The Java program I've attached is a Kinesis Producer, aka it publishes records to the Kinesis Data Stream. It imports the necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
+- It'll read and parse the CSV file comprising NYC Taxi Telemetry Data, & retrieve a list of Trip Objects
+- Next, I configure the Kinesis producer with specific parameters. We've fine-tuned Configuration Settings - Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. Creates a Kinesis producer instance based on the provided configuration. (More on this subsequently)
+- Iterates over the list of trips & converts each trip into JSON format, Wraps the JSON data into a ByteBuffer and asynchronously adds the user record to the specified Kinesis data stream.
+- Collects futures for each put operation to analyze results asynchronously.
+- Blocks to wait for put operations to finish and checks the results.
+- If the put operation is successful, it prints the shard ID where the record was put. And, if it fails, it prints out the attempts made along with their status.
+
+This markdown format can be directly copied into a GitHub README file for clarity and organization.
+
+
+
 
 ## Setting up the Environment for Kinesis
 
