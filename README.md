@@ -46,19 +46,48 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 
 </br>
 
+---
 
-<ins>***Kinesis Producer Codebase - What does it actually do?***</ins>
+<ins>Kinesis Producer Codebase - What does it actually do?</ins>
 
-- The Java program attached above is actually the Kinesis Producer Code, aka it publishes records to the Kinesis Data Stream. It imports the necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
-- It'll read and parse the CSV file comprising NYC Taxi Telemetry Data, & retrieve a list of Trip Objects
-- Next, I've configured the Kinesis Producer with specific parameters, fine-tuned Configuration Settings - Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. And then created a Kinesis producer instance based on the provided configuration. (More on this subsequently)
-- Iterates over the list of trips & converts each trip into JSON format, Wraps the JSON data into a ByteBuffer and asynchronously adds the user record to the specified Kinesis data stream.
-- The request handling is asynchronous, and hence the code collects futures for each put operation (Since this is an asynchronous computation), 
-  This means that the program continues to execute without waiting for each put operation to complete. Instead, it adds each put operation's future to a list for later analysis. This approach improves efficiency by allowing the program to continue processing data while concurrently handling the results of the put operations.
+1) The Java program attached above serves as the Kinesis Producer, responsible for publishing records to the Kinesis Data Stream. It imports necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
 
-- _Here, future refers to a Java object, representing the result of an asynchronous computation. When you submit a task for execution asynchronously, you receive a Future object immediately, which you can use to track the status and retrieve the result of the computation later_
+2) Initially, it reads and parses NYC Taxi Telemetry Data from a CSV file, retrieving a list of Trip Objects.
 
-- Lastly, it prints shard IDs for successful puts and attempts for failures.
+3) Next, the code configures the Kinesis Producer with specific parameters, fine-tuning Configuration Settings such as Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. It then creates a Kinesis producer instance based on the provided configuration.
+
+4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates parallelism by utilizing multiple worker threads. This is achieved by employing an ExecutorService with a fixed thread pool size. 
+
+6) This enablehe code effectively distributes the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
+   
+7) Here, we have used CompletableFuture in conjunction with the ExecutorService, for truly non-blocking asynchronous processing. 
+
+8) ExecutorService helps us with configuring the threads, ComplatebleFuture helps us in defining and managing the tasks to be executed on these threads,
+
+9) Finally, the code prints shard IDs for successful puts and attempts for failures.
+
+</br>
+
+### Strategy for Effective Thread Management
+
+ Submitting a task to the ExecutorService is asynchronous, the task runs independently of the main thread. However, upon submitting the task, it returns a Future object immediately, that would help us in tracking the status and retrieving the result at a later point.
+
+ **Pain Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
+
+ ***--> While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
+ 
+Enter Completable future.
+
+To handle the results of the asynchronous operation without blocking, CompletableFuture provides us with a rich set of methods, such as _thenApply()_, _thenCombine()_, _thenAccept()_, that allow us to specify callback functions to be executed once the future completes.
+
+These methods help maintain the truly asynchronous nature, by not blocking the calling thread, Instead, it schedules actions to be performed upon completion of the asynchronous task. 
+
+Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
+
+
+
+---
+
 
 ## Setting up the Environment for Kinesis
 
