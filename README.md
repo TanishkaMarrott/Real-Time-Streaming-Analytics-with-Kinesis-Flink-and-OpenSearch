@@ -5,22 +5,19 @@ This Real-time Streaming pipeline integrates Data Processing with Data Ingestion
 
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
----
-## Project Workflow
+## Deep Dive into the Project Workflow
 
-### <ins>Data Ingestion - Specifics</ins>
+### Data Ingestion - Specifics
 
 
-_**AWS Service Utilised-**_ 
+_**AWS Service Utilised:-**_ 
 Kinesis Data Streams
 
-_**Primary Objective-**_
+_**Primary Objective:-**_
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 
-</br>
 
-
---> <ins>**_Key Design Considerations I've Made_**</ins> 
+<rarr> <ins>**_Key Design Considerations I've made_**</ins> 
 
 _**a) Data Injection Mechanism**_ 
 
@@ -43,46 +40,65 @@ _**b) Capacity Mode**_
 I've opted for the _On-demand Capacity Mode_ for Kinesis Data Streams due to the unpredictable and variable nature of my data stream's throughput requirements. With this mode, the capacity of the data stream scales automatically based on the incoming data volume, ensuring that I don't need to predefine or manage shard capacities.
 
 This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
-
 </br>
 
----
 
-<ins>Kinesis Producer Codebase - What does it actually do?</ins>
+### Kinesis Producer Codebase - What does it actually do?
 
 1) The Java program attached above serves as the Kinesis Producer, responsible for publishing records to the Kinesis Data Stream. It imports necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
 
-2) Initially, it reads and parses NYC Taxi Telemetry Data from a CSV file, retrieving a list of Trip Objects.
+2) Initially, it reads and parses NYC Taxi Telemetry Data from a CSV file, & retrieves a list of Trip Objects.
 
-3) Next, the code configures the Kinesis Producer with specific parameters, fine-tuning Configuration Settings such as Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. It then creates a Kinesis producer instance based on the provided configuration.
+3) Next, the code configures the Kinesis Producer with specific parameters, fine-tuning Configuration Settings such as Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. It then creates a Kinesis Producer instance based on the provided configuration.
 
-4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates parallelism by utilizing multiple worker threads. This is achieved by employing an ExecutorService with a fixed thread pool size. 
+4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates parallelism by utilizing multiple worker threads. This is achieved by employing an _ExecutorService_ with a fixed thread pool size. 
 
-6) This enablehe code effectively distributes the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
+6) This enables the code to effectively distribute the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
    
-7) Here, we have used CompletableFuture in conjunction with the ExecutorService, for truly non-blocking asynchronous processing. 
+7) Here, we have used _CompletableFuture_ in conjunction with the ExecutorService, for truly non-blocking asynchronous processing. 
 
-8) ExecutorService helps us with configuring the threads, ComplatebleFuture helps us in defining and managing the tasks to be executed on these threads,
+8) _ExecutorService_ helps us with configuring the threads, _ComplatebleFuture_ helps us in defining and managing the tasks to be executed on these threads,
 
 9) Finally, the code prints shard IDs for successful puts and attempts for failures.
 
-</br>
+### What Strategy did we leverage for Effective Thread Management?
 
-### Strategy for Effective Thread Management
+ Submitting a task to the _ExecutorService_ is asynchronous, the task runs independently of the main thread. However, upon submitting the task, it returns a _Future_ object immediately, that would help us in tracking the status and retrieving the result at a later point.
 
- Submitting a task to the ExecutorService is asynchronous, the task runs independently of the main thread. However, upon submitting the task, it returns a Future object immediately, that would help us in tracking the status and retrieving the result at a later point.
+ **Pain-Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
 
- **Pain Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
-
- ***--> While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
+ ***While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
  
-Enter Completable future.
+Enter **CompletableFuture**.
 
 To handle the results of the asynchronous operation without blocking, CompletableFuture provides us with a rich set of methods, such as _thenApply()_, _thenCombine()_, _thenAccept()_, that allow us to specify callback functions to be executed once the future completes.
 
 These methods help maintain the truly asynchronous nature, by not blocking the calling thread, Instead, it schedules actions to be performed upon completion of the asynchronous task. 
 
 Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
+
+---
+
+### <ins>Data Transformation</ins>
+
+In this phase, we'd be using Kinesis Data Firehose in conjunction with AWS Glue, 
+
+Quick Overview of the components involved:- 
+- 
+
+
+**Components used:-**
+Kinesis Data Firehose:- KDF is essentially used to reliably capture, and load streaming data into Data Stores and Analytics Tools. (Ex- S3 in our case)
+
+AWS Glue:- Glue is a fully managed ETL Service. This is typically used in conjunction with KDF 
+
+External Table in Glue:-
+
+We will now integrate the data stream thus created with the Kinesis Firehose to write data to S3 using the parquet file format.
+Kinesis Data Firehose will be used in conjunction 
+There's a Lambda function too for adding the source of the data in the incoming events and then sends the transformed data to our Firehose Delivery Stream.
+
+
 
 
 
