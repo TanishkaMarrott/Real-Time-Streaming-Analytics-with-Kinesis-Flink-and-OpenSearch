@@ -1,14 +1,11 @@
 # Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 
-## Setting the context
+## Project Workflow 
 This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch.
 
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
-## Deep Dive into the Project Workflow
-
-### Data Ingestion - Specifics
-
+## Data Ingestion - Specifics
 
 _**AWS Service Utilised:-**_ 
 Kinesis Data Streams
@@ -63,40 +60,49 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 
 ### What Strategy did we leverage for Effective Thread Management?
 
- Submitting a task to the _ExecutorService_ is asynchronous, the task runs independently of the main thread. However, upon submitting the task, it returns a _Future_ object immediately, that would help us in tracking the status and retrieving the result at a later point.
+- Submitting a task to the _ExecutorService_ is asynchronous, the task runs independently of the main thread. However, upon submitting the task, it returns a _Future_ object immediately, that would help us in tracking the status and retrieving the result at a later point.
 
- **Pain-Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
+  **Pain-Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
 
- ***While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
+***While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
  
-Enter **CompletableFuture**.
+ Enter **CompletableFuture**.
 
-To handle the results of the asynchronous operation without blocking, CompletableFuture provides us with a rich set of methods, such as _thenApply()_, _thenCombine()_, _thenAccept()_, that allow us to specify callback functions to be executed once the future completes.
+- To handle the results of the asynchronous operation without blocking, CompletableFuture provides us with a rich set of methods, such as _thenApply()_, _thenCombine()_, _thenAccept()_, that allow us to specify callback functions to be executed once the future completes.
 
-These methods help maintain the truly asynchronous nature, by not blocking the calling thread, Instead, it schedules actions to be performed upon completion of the asynchronous task. 
+- These methods help maintain the truly asynchronous nature, by not blocking the calling thread, Instead, it schedules actions to be performed upon completion of the asynchronous task. This also aids in combining, chaining multiple futures, and for more complex workflows.
 
-Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
+- Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
 
 ---
 
-### <ins>Data Transformation</ins>
+## Data Transformation
 
-In this phase, we'd be using Kinesis Data Firehose in conjunction with AWS Glue, 
+Here, we'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
-Quick Overview of the components involved:- 
-- 
+#### Why Firehose + Glue? 
+
+Kinesis Firehose is excellent at capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+It's fully managed, and scales automatically to match the throughput of incoming data.
+It can help with minimal processing -> For instance, it can handle simpler transformations involving conversion of Data Formats, or simple processing through Lambda.
+
+#### Utilization of Kinesis Firehose in the Project
+
+In context with our project, we've utilised Kinesis Data Firehose for loading it into S3, and for initial transformation, wherein we've converted the Data format from JSON to Parquet
+
+Reason for Data Format Conversion: 
+
+This conversion is beneficial for optimizing storage (as Parquet is a compressed, columnar format) and for improving querying and analytics efficiency. _**Particularly advantageous when using analytic tools that perform better with columnar storage like Athena.**_
+
+#### Role of AWS Glue in the Project
+
+Glue, on the other hand, is specifically for complex ETL workflows. 
+
+Glue as a Metadata Repository:-
+
+However, in this project, Glue is being used for its significance as a central Metadata Repository through Data Catalog. The Schema Definitions it stores enhances querying capabilities in Athena. Athena can use the Schema Information from the Data Catalog for querying data stored in S3, which streamlines the Analytics process.
 
 
-**Components used:-**
-Kinesis Data Firehose:- KDF is essentially used to reliably capture, and load streaming data into Data Stores and Analytics Tools. (Ex- S3 in our case)
-
-AWS Glue:- Glue is a fully managed ETL Service. This is typically used in conjunction with KDF 
-
-External Table in Glue:-
-
-We will now integrate the data stream thus created with the Kinesis Firehose to write data to S3 using the parquet file format.
-Kinesis Data Firehose will be used in conjunction 
-There's a Lambda function too for adding the source of the data in the incoming events and then sends the transformed data to our Firehose Delivery Stream.
 
 
 
