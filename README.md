@@ -40,23 +40,24 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 </br>
 
 
+---
+
 ### Kinesis Producer Codebase - What does it actually do?
 
-1) The Java program attached above serves as the Kinesis Producer, responsible for publishing records to the Kinesis Data Stream. It imports necessary libraries from the AWS SDK for Java, including the Kinesis Producer Library.
+1) The Java program attached above serves as the **Kinesis Producer**, responsible for **publishing records to the Kinesis Data Stream**. It imports necessary libraries from the AWS SDK for Java, including the **Kinesis Producer Library**.
 
-2) Initially, it reads and parses NYC Taxi Telemetry Data from a CSV file, & retrieves a list of Trip Objects.
+2) Initially, it **reads and parses NYC Taxi Telemetry Data** from a CSV file, & retrieves a list of **Trip Objects**.
+ Next, the code configures the Kinesis Producer with specific parameters, fine-tuning **Configuration Settings** such as **Record Buffer Time**, **Maximum Connections**, **Request Timeout**, and **Record TTL**. It then creates a **Kinesis Producer instance** based on the provided configuration.
 
-3) Next, the code configures the Kinesis Producer with specific parameters, fine-tuning Configuration Settings such as Record Buffer Time, Maximum Connections, Request Timeout, and Record TTL. It then creates a Kinesis Producer instance based on the provided configuration.
-
-4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates parallelism by utilizing multiple worker threads. This is achieved by employing an _ExecutorService_ with a fixed thread pool size. 
-
-6) This enables the code to effectively distribute the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
+4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates **parallelism** by utilizing multiple worker threads. This is achieved by employing an _**ExecutorService**_ with a **fixed thread pool size**. 
+This enables the code to effectively distribute the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
    
-7) Here, we have used _CompletableFuture_ in conjunction with the ExecutorService, for truly non-blocking asynchronous processing. 
+5) Here, we have used _**CompletableFuture**_ in conjunction with the ExecutorService, for **truly non-blocking asynchronous processing**. 
+ _**ExecutorService**_ helps us with configuring the threads, _**CompletableFuture**_ helps us in defining and managing the tasks to be executed on these threads,
 
-8) _ExecutorService_ helps us with configuring the threads, _ComplatebleFuture_ helps us in defining and managing the tasks to be executed on these threads,
+6) Finally, the code prints **shard IDs for successful puts** and **attempts for failures**.
 
-9) Finally, the code prints shard IDs for successful puts and attempts for failures.
+---
 
 ### What Strategy did we leverage for Effective Thread Management?
 
@@ -64,15 +65,14 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 
   **Pain-Point:-** The _get()_ method used for retrieving the result of the future object is blocking. The thread that calls _get()_ will be in stalled state until the result is available.
 
-***While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
+  ***While the task itself is running asynchronously, retrieving its result via get() does not adhere to asynchronous principles, it forces the calling thread to wait.***
  
- Enter **CompletableFuture**.
+  Enter **CompletableFuture**.
 
 - To handle the results of the asynchronous operation without blocking, CompletableFuture provides us with a rich set of methods, such as _thenApply()_, _thenCombine()_, _thenAccept()_, that allow us to specify callback functions to be executed once the future completes.
 
 - These methods help maintain the truly asynchronous nature, by not blocking the calling thread, Instead, it schedules actions to be performed upon completion of the asynchronous task. This also aids in combining, chaining multiple futures, and for more complex workflows.
-
-- Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
+Thus, Completable future  provides a way to manage, chain, and react to the completion of these asynchronous tasks, also in a non-blocking manner.
 
 ---
 
@@ -92,20 +92,15 @@ In context with our project, we've utilised Kinesis Data Firehose for loading it
 
 Reason for Data Format Conversion: 
 
-This conversion is beneficial for optimizing storage (as Parquet is a compressed, columnar format) and for improving querying and analytics efficiency. _**Particularly advantageous when using analytic tools that perform better with columnar storage like Athena.**_
+This conversion is beneficial for optimizing storage (as Parquet is a compressed, columnar format) and for improving querying and analytics efficiency. _**Advantageous when using analytic tools that perform better with columnar storage like Athena.**_
 
-#### Role of AWS Glue in the Project
+#### Role of AWS Glue 
 
 Glue, on the other hand, is specifically for complex ETL workflows. 
 
 Glue as a Metadata Repository:-
 
-However, in this project, Glue is being used for its significance as a central Metadata Repository through Data Catalog. The Schema Definitions it stores enhances querying capabilities in Athena. Athena can use the Schema Information from the Data Catalog for querying data stored in S3, which streamlines the Analytics process.
-
-
-
-
-
+However, in this project, Glue is being used for its significance as a central Metadata Repository through Data Catalog. The Schema Definitions it stores enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3, which streamlines the Analytics process.**
 
 
 ---
