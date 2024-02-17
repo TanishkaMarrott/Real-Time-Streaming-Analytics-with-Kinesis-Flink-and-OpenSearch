@@ -90,6 +90,10 @@ Glue as a Metadata Repository
 
 Glue is specifically for complex ETL Workflows. However, in this project, Glue is being used for its significance as a central Metadata Repository through Data Catalog. The Schema Definitions it stores enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3, which streamlines the Analytics process.**
 
+</br>
+So, as a next step, we create an external table in Glue, that'll be used by KDF for Data Format Conversion.
+Table Definition has been attached above.
+
 
 ---
 
