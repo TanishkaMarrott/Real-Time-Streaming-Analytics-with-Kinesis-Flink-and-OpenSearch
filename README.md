@@ -82,20 +82,28 @@ It can help with minimal processing -> For instance, it can handle simpler trans
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
+</br>
+
 <ins>**_Key Design Considerations I've made_**</ins> 
 
-_**1)Data Format Transformation**_ - 
+_**a) Data Format Transformation:-**_ 
 
 In the scope of our project, Kinesis Data Firehose has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format. Couple of Reasons here- a) Significantly reduces Storage Costs. b) Parquet's columnar structure allows for more efficient data querying in Athena
 
-_**2)Buffer Interval Optimisation**_
+_**b) Buffer Interval Optimisation:-**_
 
 In our project's configuration of Kinesis Data Firehose, we've opted to _maximize the Buffer Interval time for data delivery into Amazon S3._ 
-Rationale behind this:- By allowing Data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3, thereby reducing transaction costs. This also results in improvising the throughput through batching and subsequent storage. 
+Rationale behind this:- By allowing Data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3, thereby reducing transaction costs. This also results in improvising the throughput through batching and subsequent storage. Something around 300-600 would be a good number to start with.
 
-Buffer Size has been maximised, Costs would be lowered, but at the cost of higher latency. 
+Buffer Size has been maximised, Costs would be lowered, but at the cost of a higher latency. 
 
-Cranking up the Buffer Interval to 900 seconds (max possible) would be a relative choice. We need to strike balance between the timely availability of data versus the operational costs incurred
+Cranking up the Buffer Interval to 900 seconds (max possible) would be a relative choice. We need to strike balance between the timely availability of data versus the operational costs incurred. 
+</br>
+
+_**c) S3 Compression and Encryption:-**_
+
+- We utilize Snappy compression for source records,  which leads to faster transmission and cost savings in storage.
+- Encryption is implemented using AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
 
 
