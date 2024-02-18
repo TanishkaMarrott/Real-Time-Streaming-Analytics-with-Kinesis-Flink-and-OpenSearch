@@ -39,18 +39,8 @@ I've opted for the _On-demand Capacity Mode_ for Kinesis Data Streams due to the
 This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
 
 ### The Producer Codebase - In a Gist
-1) The Java program attached above serves as the **Kinesis Producer**, responsible for **publishing records to the Kinesis Data Stream**. It imports necessary libraries from the AWS SDK for Java, including the **Kinesis Producer Library**.
 
-2) Initially, it **reads and parses NYC Taxi Telemetry Data** from a CSV file, & retrieves a list of **Trip Objects**.
- Next, the code configures the Kinesis Producer with specific parameters, fine-tuning **Configuration Settings** such as **Record Buffer Time**, **Maximum Connections**, **Request Timeout**, and **Record TTL**. It then creates a **Kinesis Producer instance** based on the provided configuration.
-
-4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates **parallelism** by utilizing multiple worker threads. This is achieved by employing an _**ExecutorService**_ with a **fixed thread pool size**. 
-This enables the code to effectively distribute the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
-   
-5) Here, I've used _**CompletableFuture**_ in conjunction with the ExecutorService, for **truly non-blocking asynchronous processing**. 
- _**ExecutorService**_ helps us with configuring the threads, _**CompletableFuture**_ helps us in defining and managing the tasks to be executed on these threads,
-
-6) Finally, the code prints **shard IDs for successful puts** and **attempts for failures**.
+In our project, the Kinesis Producer is developed in Java, and is tailored to handle NYC Taxi Telemetry Data. The code initiates by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like Record Buffer Time and Maximum Connections. We've incorporated parallelism and concurrency by deploying an ExecutorService with a fixed thread pool size for optimizing scalability and throughput. The integration of CompletableFuture with ExecutorService facilitates a fully non-blocking asynchronous processing, --> the efficiency of task management across threads. And finally graceful Error handling through the output of shard IDs for success and logging of failures. This ensures a robust Data Ingestion Layer.
 </br>
 
 ### Strategy I've leveraged for Effective Thread Management
