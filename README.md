@@ -48,28 +48,29 @@ This flexibility is crucial for accommodating sudden spikes in data ingestion ra
 4) To enhance scalability and throughput, especially in the context of real-time streaming data, the code incorporates **parallelism** by utilizing multiple worker threads. This is achieved by employing an _**ExecutorService**_ with a **fixed thread pool size**. 
 This enables the code to effectively distribute the workload across multiple threads, increasing overall throughput and responsiveness to incoming data.
    
-5) Here, we have used _**CompletableFuture**_ in conjunction with the ExecutorService, for **truly non-blocking asynchronous processing**. 
+5) Here, I've used _**CompletableFuture**_ in conjunction with the ExecutorService, for **truly non-blocking asynchronous processing**. 
  _**ExecutorService**_ helps us with configuring the threads, _**CompletableFuture**_ helps us in defining and managing the tasks to be executed on these threads,
 
 6) Finally, the code prints **shard IDs for successful puts** and **attempts for failures**.
 </br>
 
-### Strategy for Effective Thread Management
+### Strategy I've leveraged for Effective Thread Management
 
 **The Pain-Point:-** 
 
 Submitting a task to the _ExecutorService_ is asynchronous. However, upon submitting the task, it returns a _Future_ object immediately, which helps in tracking the status and retrieving the result at a later point.
 _**Future.get() forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
 
-***Our Solution:-***
+**Our Solution:-**
 
 _ExecutorService_ + _CompletableFuture_
 
-We used a combination of both, since CompletableFuture provides non-blocking methods like thenApply() and thenCombine() to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
+I've used a combination of both, since CompletableFuture provides non-blocking methods like thenApply() and thenCombine() to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
+
+</br>
 
 ## Data Transformation
-
-Here, we'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
+Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
 #### Why Firehose + Glue? 
 
@@ -92,7 +93,7 @@ In the scope of our project, Kinesis Data Firehose has been leveraged for both d
 
 _**b) Buffer Interval Optimisation:-**_
 
-In our project's configuration of Kinesis Data Firehose, we've opted to _maximize the Buffer Interval time for data delivery into Amazon S3._ 
+In our project's configuration of Kinesis Data Firehose, I've opted to _maximize the Buffer Interval time for data delivery into Amazon S3._ 
 Rationale behind this:- By allowing Data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3, thereby reducing transaction costs. This also results in improvising the throughput through batching and subsequent storage. Something around 300-600 would be a good number to start with.
 
 Buffer Size has been maximised, Costs would be lowered, but at the cost of a higher latency. 
@@ -102,8 +103,8 @@ Cranking up the Buffer Interval to 900 seconds (max possible) would be a relativ
 
 _**c) S3 Compression and Encryption:-**_
 
-- We utilize Snappy compression for source records,  which leads to faster transmission and cost savings in storage.
-- Encryption is implemented using AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+- I've utilized Snappy compression for source records,  which leads to faster transmission and cost savings in storage. I'm prioritising high speed over a higher compression ratio.
+- Encryption is implemented through AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
 
 
