@@ -85,16 +85,22 @@ As a central Metadata Repository through Data Catalog. The Schema Definitions it
 <ins>**_Key Design Considerations I've made_**</ins> 
 
 _**1)Data Format Transformation**_ - 
-In the scope of our project, Kinesis Data Firehose has been leveraged for both data ingestion into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format.
 
-_Rationale Behind Data Format Conversion:-_
-- Storage optimization
-- Parquet is an efficient, compressed, columnar storage format --> significantly reduces storage space requirements.
+In the scope of our project, Kinesis Data Firehose has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format. Couple of Reasons here- a) Significantly reduces Storage Costs. b) Parquet's columnar structure allows for more efficient data querying in Athena
 
-_Advantages in Analytical Context:-_
-When it comes to analytical tools, especially those like Amazon Athena, they're optimized for columnar storage, Parquet's structure allows for more efficient data querying operations --> faster insights and improved overall performance in data analytics workflow.
+_**2)Buffer Interval Optimisation**_
 
-_**2)**_
+In our project's configuration of Kinesis Data Firehose, we've opted to _maximize the Buffer Interval time for data delivery into Amazon S3._ 
+Rationale behind this:- By allowing Data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3, thereby reducing transaction costs. This also results in improvising the throughput through batching and subsequent storage. 
+
+Buffer Size has been maximised, Costs would be lowered, but at the cost of higher latency. 
+
+Cranking up the Buffer Interval to 900 seconds (max possible) would be a relative choice. We need to strike balance between the timely availability of data versus the operational costs incurred
+
+
+
+
+
 
 
 
