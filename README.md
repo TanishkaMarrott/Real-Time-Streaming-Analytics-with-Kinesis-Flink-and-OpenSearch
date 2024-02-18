@@ -38,8 +38,6 @@ I've opted for the _On-demand Capacity Mode_ for Kinesis Data Streams due to the
 
 This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
 
-</br>
-
 ### The Producer Codebase - In a Gist
 1) The Java program attached above serves as the **Kinesis Producer**, responsible for **publishing records to the Kinesis Data Stream**. It imports necessary libraries from the AWS SDK for Java, including the **Kinesis Producer Library**.
 
@@ -106,6 +104,8 @@ _**c) S3 Compression and Encryption:-**_
 
 - I've utilized Snappy compression for source records,  which leads to faster transmission and cost savings in storage. I'm prioritising high speed over a higher compression ratio.
 - Encryption is implemented through AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+
+
 
 
 
