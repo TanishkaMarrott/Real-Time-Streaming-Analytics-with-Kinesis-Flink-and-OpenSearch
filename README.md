@@ -77,22 +77,32 @@ Kinesis Firehose is excellent at capturing and loading streaming data reliably i
 It's fully managed, and scales automatically to match the throughput of incoming data.
 It can help with minimal processing -> For instance, it can handle simpler transformations involving conversion of Data Formats, or simple processing through Lambda.
 
-#### Utilization of Kinesis Firehose in the Project
-
-In context with our project, we've utilised Kinesis Data Firehose for loading it into S3, and for initial transformation, wherein we've converted the Data format from JSON to Parquet
-
-_Reason for Data Format Conversion:_ 
-This conversion is beneficial for optimizing storage (as Parquet is a compressed, columnar format) and for improving querying and analytics efficiency. _**Advantageous when using analytic tools that perform better with columnar storage like Athena.**_
-
 #### Role of AWS Glue
 
-Glue as a Metadata Repository
+As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
+(I've shared the Table Definition above)
 
-Glue is specifically for complex ETL Workflows. However, in this project, Glue is being used for its significance as a central Metadata Repository through Data Catalog. The Schema Definitions it stores enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3, which streamlines the Analytics process.**
+<ins>**_Key Design Considerations I've made_**</ins> 
+
+1) _**Data Format Transformation**_ - 
+In the scope of our project, Kinesis Data Firehose has been leveraged for both data ingestion into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format.
+
+_Rationale Behind Data Format Conversion:_
+- Storage optimization
+- Parquet is an efficient, compressed, columnar storage format --> significantly reduces storage space requirements.
+
+_Advantages in Analytical Context:_
+When it comes to analytical tools, especially those like Amazon Athena, they're optimized for columnar storage, Parquet's structure allows for more efficient data querying operations --> faster insights and improved overall performance in data analytics workflow.
+
+
+
+
+
+
+
 
 </br>
-So, as a next step, we create an external table in Glue, that'll be used by KDF for Data Format Conversion.
-Table Definition has been attached above.
+
 
 
 ---
