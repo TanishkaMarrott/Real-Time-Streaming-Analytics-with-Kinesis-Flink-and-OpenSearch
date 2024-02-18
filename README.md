@@ -80,19 +80,21 @@ It can help with minimal processing -> For instance, it can handle simpler trans
 #### Role of AWS Glue
 
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
-(I've shared the Table Definition above)
+(I've shared the Table Definition above, Firehose references this definition in Glue)
 
 <ins>**_Key Design Considerations I've made_**</ins> 
 
-1) _**Data Format Transformation**_ - 
+_**1)Data Format Transformation**_ - 
 In the scope of our project, Kinesis Data Firehose has been leveraged for both data ingestion into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format.
 
-_Rationale Behind Data Format Conversion:_
+_Rationale Behind Data Format Conversion:-_
 - Storage optimization
 - Parquet is an efficient, compressed, columnar storage format --> significantly reduces storage space requirements.
 
-_Advantages in Analytical Context:_
+_Advantages in Analytical Context:-_
 When it comes to analytical tools, especially those like Amazon Athena, they're optimized for columnar storage, Parquet's structure allows for more efficient data querying operations --> faster insights and improved overall performance in data analytics workflow.
+
+_**2)**_
 
 
 
