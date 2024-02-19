@@ -16,31 +16,41 @@ Capturing & ingesting extensive streams of real-time data, serving as a pivotal 
 
 <rarr> <ins>**_Key Design Considerations I've made_**</ins> 
 
-_**a) Data Injection Mechanism**_ 
+_**a) How do we inject the Data?**_ 
 
   I've leveraged Kinesis Producer Library for constructing our Data Producers. 
   Quick Breakdown:-
+  
   </br>
   
 
- | Feature                                                           | Description                                                                                                                                                                                  |
-|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-|  Aggregates multiple records into a single PUT request       | Reduces operational overhead & improves throughput.        |                                                                                                                                  |
-| Handles requests asynchronously  | Decouples the Data Production Logic from Stream Interaction, that is, Data production continues at a steady pace, without being affected by the latency introduced by Stream Interactions.          |
-|  Implements graceful Error Handling     | Define the criterion for subsequent retry attempts upon failure, for more resilience and reliability.                                                                                 |
-|  Compresses data to reduce the amount of data transmitted   | Optimizes bandwidth usage and reducing costs.                                                                                                                                              |
-|  Collects Metrics with regards to Data production & Stream Interaction | - Data production metrics, primarily the ones related to volume of data generated, aiding in estimating the capacity to be provisioned. - Stream Interaction metrics (Ex- Latency in processing Data) help in providing insights into the performance and health of the data ingestion process. |
-</br>
+| **Feature** | **Description** |
+|-------------|-----------------|
+| **Aggregates multiple records into a single PUT request** | Reduces operational overhead & **improves throughput**. |
+| **Handles requests asynchronously** | **Decouples** the Data Production Logic from Stream Interaction, ensuring steady data production pace, unaffected by latency in Stream Interactions. |
+| **Implements graceful Error Handling** | Defines criteria for retry attempts upon failure, enhancing **resilience and reliability**. |
+| **Compresses data** to reduce transmitted data volume | Optimizes **bandwidth usage** and reduces costs. |
+| **Collects Metrics** on Data production & Stream Interaction | - Metrics related to **data volume** for capacity estimation. - Stream Interaction metrics, like **latency**, provide insights into the data ingestion process's performance and health. |
+ 
+  </br>
 
-_**b) Capacity Mode**_
+_**b) What about the Capacity Mode?**_
 
-I've opted for the _On-demand Capacity Mode_ for Kinesis Data Streams due to the unpredictable and variable nature of my data stream's throughput requirements. With this mode, the capacity of the data stream scales automatically based on the incoming data volume, ensuring that I don't need to predefine or manage shard capacities.
+I've opted for the **On-demand Capacity Mode** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
 
-This flexibility is crucial for accommodating sudden spikes in data ingestion rates or adjusting to changing application demands.
+With this mode, the capacity of the data stream **scales automatically** based on the incoming data volume, ensuring that I **don't need to predefine or manage shard capacities**. This flexibility is crucial for **accommodating sudden spikes** in data ingestion rates or **adjusting to changing application demands**.
+
+  </br>
 
 ### The Producer Codebase - In a Gist
+In our project, the **Kinesis Producer** is developed in Java, tailored to handle **NYC Taxi Telemetry Data**. 
 
-In our project, the Kinesis Producer is developed in Java, and is tailored to handle NYC Taxi Telemetry Data. The code initiates by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like Record Buffer Time and Maximum Connections. We've incorporated parallelism and concurrency by deploying an ExecutorService with a fixed thread pool size for optimizing scalability and throughput. The integration of CompletableFuture with ExecutorService facilitates a fully non-blocking asynchronous processing, --> the efficiency of task management across threads. And finally graceful Error handling through the output of shard IDs for success and logging of failures. This ensures a robust Data Ingestion Layer.
+The code begins by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like **Record Buffer Time** and **Maximum Connections**.
+
+We've incorporated **parallelism and concurrency** by deploying an **ExecutorService** with a fixed thread pool size, optimizing scalability and throughput. The integration of **CompletableFuture** with ExecutorService facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
+
+And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
+
 </br>
 
 ### Strategy I've leveraged for Effective Thread Management
@@ -63,37 +73,43 @@ Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**
 
 #### Why Firehose + Glue? 
 
-Kinesis Firehose is excellent at capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
-It's fully managed, and scales automatically to match the throughput of incoming data.
-It can help with minimal processing -> For instance, it can handle simpler transformations involving conversion of Data Formats, or simple processing through Lambda.
+&#8594; We'd be using KDF for capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+It's fully managed, and scales automatically to match the throughput of incoming data. However, tt can help with _minimal _processing
 
-#### Role of AWS Glue
-
-As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
+&#8594; Rationale behind using Glue:- As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
 </br>
 
 <ins>**_Key Design Considerations I've made_**</ins> 
 
-_**a) Data Format Transformation:-**_ 
+**_a) Data Format Transformation:-_** 
 
-In the scope of our project, Kinesis Data Firehose has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is conversion from JSON to Parquet format. Couple of Reasons here- a) Significantly reduces Storage Costs. b) Parquet's columnar structure allows for more efficient data querying in Athena
+- In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
+ 
+  </br>
+  
+**_b) Buffer Interval Optimisation:-_**
 
-_**b) Buffer Interval Optimisation:-**_
+- In our project's configuration of Kinesis Data Firehose, I've opted to **_maximize the Buffer Interval time_** for data delivery into **Amazon S3**. 
+**Rationale behind this:-** By allowing Data to accumulate in large batches before delivery, we're **reducing the number of PUT requests to S3**, thereby reducing transaction costs. This also results in **improvising the throughput** through batching and subsequent storage. Something around **300-600 seconds** would be a good number to start with.
 
-In our project's configuration of Kinesis Data Firehose, I've opted to _maximize the Buffer Interval time for data delivery into Amazon S3._ 
-Rationale behind this:- By allowing Data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3, thereby reducing transaction costs. This also results in improvising the throughput through batching and subsequent storage. Something around 300-600 would be a good number to start with.
+- Buffer Size has been maximised, Costs would be lowered, but at the cost of a **higher latency**. 
 
-Buffer Size has been maximised, Costs would be lowered, but at the cost of a higher latency. 
+- Cranking up the Buffer Interval to **900 seconds** (max possible) would be a relative choice. ***We need to strike balance between the **timely availability of data versus the operational costs** incurred.****
+ 
+  </br>
+  
+**_c) S3 Compression and Encryption:-_**
 
-Cranking up the Buffer Interval to 900 seconds (max possible) would be a relative choice. We need to strike balance between the timely availability of data versus the operational costs incurred. 
-</br>
+- I've utilized **Snappy compression** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **high speed over a higher compression ratio**.
+ 
+- **Encryption** is implemented through **AWS-owned keys** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
-_**c) S3 Compression and Encryption:-**_
+**Preliminary Transformation through Lambda:-**
 
- I've utilized Snappy compression for source records,  which leads to faster transmission and cost savings in storage. I'm prioritising high speed over a higher compression ratio.
- Encryption is implemented through AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+
+
 
 
 
