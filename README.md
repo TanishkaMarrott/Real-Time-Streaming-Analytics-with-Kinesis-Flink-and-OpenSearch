@@ -92,8 +92,8 @@ Cranking up the Buffer Interval to 900 seconds (max possible) would be a relativ
 
 _**c) S3 Compression and Encryption:-**_
 
-- I've utilized Snappy compression for source records,  which leads to faster transmission and cost savings in storage. I'm prioritising high speed over a higher compression ratio.
-- Encryption is implemented through AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+ I've utilized Snappy compression for source records,  which leads to faster transmission and cost savings in storage. I'm prioritising high speed over a higher compression ratio.
+ Encryption is implemented through AWS-owned keys for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
 
 
