@@ -104,8 +104,10 @@ It's fully managed, and scales automatically to match the throughput of incoming
  
 &#8594; **Encryption** is implemented through **AWS-owned keys** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
-**Preliminary Transformation through Lambda:-**
+### Preliminary Transformation through Lambda:-
 
+--> Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, converts pickupDate and dropoffDate fields to ISO 8601 format. Having decoded the records from base-64, it adds a 'NYCTAXI' column.
+Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
 
 
 
