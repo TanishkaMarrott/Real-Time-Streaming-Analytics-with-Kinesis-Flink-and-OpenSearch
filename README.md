@@ -16,7 +16,7 @@ Capturing & ingesting extensive streams of real-time data, serving as a pivotal 
 
 ### Key Design Considerations I've made:-
 
-_**a) How do we inject the Data?**_ 
+_**How do we inject the Data?**_ 
 
   I've leveraged Kinesis Producer Library for constructing our Data Producers. 
   Quick Breakdown:-
@@ -34,7 +34,7 @@ _**a) How do we inject the Data?**_
  
   </br>
 
-_**b) What about the Capacity Mode?**_
+_**What about the Capacity Mode?**_
 
 I've opted for the **On-demand Capacity Mode** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
 
@@ -76,18 +76,23 @@ It's fully managed, and scales automatically to match the throughput of incoming
 
 &#8594; Rationale behind using Glue:- As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
+
+### Preliminary Transformation through Lambda:-
+
+&#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **converts pickupDate and dropoffDate fields to ISO 8601 format.** Having decoded the records from base-64, it **inserts the source 'NYCTAXI' column.**
+Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
+
 </br>
 
-### Key Design Considerations I've made:-
-</br>
+### Design Considerations Here:-
 
-**__a) Data Format Transformation:-__** 
+**Data Format Transformation:-** 
 
 &#8594; In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
  
   </br>
   
-**__b) Buffer Interval Optimisation:-__**
+**__Buffer Interval Optimisation:-__**
 
 &#8594; I've opted to **_maximize the Buffer Interval time_** for data delivery into **Amazon S3**. 
 **Rationale behind this:-** By allowing Data to accumulate in large batches before delivery, we're **reducing the number of PUT requests to S3**, thereby reducing transaction costs. This also results in **improvising the throughput** through batching and subsequent storage. Something around **300-600 seconds** would be a good number to start with.
@@ -98,16 +103,41 @@ It's fully managed, and scales automatically to match the throughput of incoming
  
   </br>
   
-**__c) S3 Compression and Encryption:-__**
+**__S3 Compression and Encryption:-__**
 
 &#8594; I've utilized **Snappy compression** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **high speed over a higher compression ratio**.
  
 &#8594; **Encryption** is implemented through **AWS-owned keys** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
-### Preliminary Transformation through Lambda:-
 
---> Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, converts pickupDate and dropoffDate fields to ISO 8601 format. Having decoded the records from base-64, it adds a 'NYCTAXI' column.
-Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
+## **Stream Processing & Enhancement**
+
+**Service Utilised:** Kinesis Data Analytics (KDA)
+
+A **Flink** application in **Kinesis Data Analytics** processes the data ingested, identifying high-demand areas. I**nsights are stored in OpenSearch** and **visualized via OpenSearch Dashboard.**
+
+### Apache Zeppelin Note, What it actually does?
+
+Flink + OpenSearch:-
+Flink excels at analysing streaming data. --> huge volumes + huge velocity. Goes beyond SQL for evntful computations, Windowing Functions and Complex Event processing.
+Real Time Data processing in the true sense
+
+Key Design Considerations:-
+Why did we use Flink?
+What processing does the application actually perform?
+Why OpenSearch? 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
