@@ -147,7 +147,7 @@ Using Flink in Kinesis Data Analytics for real-time, complex data processing.
 **Data Storage and Visualization:** S3 for durable storage of processed data.
 OpenSearch for data querying, analysis, and visualization.
 
-This architecture has succinctly handled the complete lifecycle of data from ingestion to actionable insights, thereby making it a comprehensive solution.
+
 
 
 
