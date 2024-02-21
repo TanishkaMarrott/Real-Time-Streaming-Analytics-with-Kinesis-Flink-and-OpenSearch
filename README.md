@@ -114,18 +114,13 @@ Function has been designed to handle errors, generating responses for each proce
 
 **Service Utilised:** Kinesis Data Analytics (KDA)
 
-A **Flink** application in **Kinesis Data Analytics** processes the data ingested, identifying high-demand areas. I**nsights are stored in OpenSearch** and **visualized via OpenSearch Dashboard.**
+**The Workflow:-** This is **Workflow #2** , Data is ingested through KDS in the form of JSON Blobs. 
 
-### Apache Zeppelin Note, What it actually does?
+The streaming data is then processed using a **Flink Application** deployed on  **Kinesis Data Analytics**. Flink excels at **extracting real-time insights** from Streaming Data. So when its **Huge Volumes + Huge Velocity**, Flink goes beyond traditional SQL.
+It's also useful for some **complex eventful processing**, windowing, and **stateful computations** / operations.
 
-Flink + OpenSearch:-
-Flink excels at analysing streaming data. --> huge volumes + huge velocity. Goes beyond SQL for evntful computations, Windowing Functions and Complex Event processing.
-Real Time Data processing in the true sense
+OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
 
-Key Design Considerations:-
-Why did we use Flink?
-What processing does the application actually perform?
-Why OpenSearch? 
 
 
 
