@@ -53,12 +53,12 @@ And finally, **graceful Error handling** is achieved through the output of shard
 
 ## Strategy I've leveraged for Effective Thread Management
 
-**The Pain-Point:-** 
+**_The Pain-Point:-_** 
 
 Submitting a task to the _'`ExecutorService`'_ is asynchronous. However, upon submitting the task, it returns a `Future` object immediately, which helps in tracking the status and retrieving the result at a later point.
 _**`Future.get()` forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
 
-**Our Solution:-**
+**_Our Solution:-_**
 
 _`ExecutorService`_ + _`CompletableFuture`_
 
@@ -69,7 +69,7 @@ I've used a combination of both, since `CompletableFuture` provides non-blocking
 ## The Data Transformation Layer
 Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
-### Why Firehose + Glue? 
+### _Why Firehose + Glue?_
 
 &#8594; We'd be using KDF for capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
 It's fully managed, and scales automatically to match the throughput of incoming data. However, tt can help with _minimal _processing
@@ -86,13 +86,13 @@ Function has been designed to handle errors, generating responses for each proce
 
 ### Design Considerations Here:-
 
-**Data Format Transformation:-** 
+**_Data Format Transformation:-_** 
 
 &#8594; In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
  
   </br>
   
-**__Buffer Interval Optimisation:-__**
+**_Buffer Interval Optimisation:-_**
 
 &#8594; I've opted to **_maximize the Buffer Interval time_** for data delivery into **Amazon S3**. 
 **Rationale behind this:-** By allowing Data to accumulate in large batches before delivery, we're **reducing the number of PUT requests to S3**, thereby reducing transaction costs. This also results in **improvising the throughput** through batching and subsequent storage. Something around **300-600 seconds** would be a good number to start with.
@@ -103,7 +103,7 @@ Function has been designed to handle errors, generating responses for each proce
  
   </br>
   
-**__S3 Compression and Encryption:-__**
+**_S3 Compression and Encryption:-_**
 
 &#8594; I've utilized **Snappy compression** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **high speed over a higher compression ratio**.
  
@@ -131,6 +131,8 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
 - A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
 - 
 - An **aggregation query to insert summarized data** into the `trip_statistics` table. --> Future Analysis and Visualisation
+
+
 
 
 
