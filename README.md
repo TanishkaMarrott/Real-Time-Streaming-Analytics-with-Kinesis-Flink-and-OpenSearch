@@ -46,7 +46,7 @@ In our project, the **Kinesis Producer** is developed in Java, tailored to handl
 
 The code begins by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like **Record Buffer Time** and **Maximum Connections**.
 
-We've incorporated **parallelism and concurrency** by deploying an **ExecutorService** with a fixed thread pool size, optimizing scalability and throughput. The integration of **CompletableFuture** with ExecutorService facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
+We've incorporated **parallelism and concurrency** by deploying an **`ExecutorService`** with a fixed thread pool size, optimizing scalability and throughput. The integration of **`CompletableFuture`** with `ExecutorService` facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
 
 And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
 </br>
@@ -55,14 +55,14 @@ And finally, **graceful Error handling** is achieved through the output of shard
 
 **The Pain-Point:-** 
 
-Submitting a task to the _ExecutorService_ is asynchronous. However, upon submitting the task, it returns a _Future_ object immediately, which helps in tracking the status and retrieving the result at a later point.
-_**Future.get() forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
+Submitting a task to the _'`ExecutorService`'_ is asynchronous. However, upon submitting the task, it returns a `Future` object immediately, which helps in tracking the status and retrieving the result at a later point.
+_**`Future.get()` forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
 
 **Our Solution:-**
 
-_ExecutorService_ + _CompletableFuture_
+_`ExecutorService`_ + _`CompletableFuture`_
 
-I've used a combination of both, since CompletableFuture provides non-blocking methods like thenApply() and thenCombine() to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
+I've used a combination of both, since `CompletableFuture` provides non-blocking methods like `thenApply()` and `thenCombine()` to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
 
 </br>
 
@@ -112,14 +112,29 @@ Function has been designed to handle errors, generating responses for each proce
 
 ## **Stream Processing & Enhancement**
 
-**Service Utilised:** Kinesis Data Analytics (KDA)
+**_Service Utilised:-_** Kinesis Data Analytics (KDA)
 
-**The Workflow:-** This is **Workflow #2** , Data is ingested through KDS in the form of JSON Blobs. 
+**_The Workflow:-_** This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
 
 The streaming data is then processed using a **Flink Application** deployed on  **Kinesis Data Analytics**. Flink excels at **extracting real-time insights** from Streaming Data. So when its **Huge Volumes + Huge Velocity**, Flink goes beyond traditional SQL.
 It's also useful for some **complex eventful processing**, windowing, and **stateful computations** / operations.
 
 OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
+
+### The Code - Overview
+
+The compiled code includes:
+
+- **Connector configurations** for both the Kinesis data stream and OpenSearch.
+- Creation of the **`taxi_trips`** table, which is linked to the Kinesis stream.
+- **Creation of the `trip_statistics` table in OpenSearch.**
+- A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
+- An **aggregation query to insert summarized data** into the `trip_statistics` table.
+
+
+
+
+
 
 
 
