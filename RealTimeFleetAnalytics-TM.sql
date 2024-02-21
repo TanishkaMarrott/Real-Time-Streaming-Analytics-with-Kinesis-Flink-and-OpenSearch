@@ -23,16 +23,7 @@ CREATE TABLE taxi_trips (
     'aws.region' = 'us-west-2',
     'scan.stream.initpos' = 'LATEST',
     'format' = 'json'
-)PARTITIONED BY (
-    `year` STRING,
-    `month` STRING,
-    `day` STRING,
-    `hour` STRING
-)
-ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
-STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
-OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
-LOCATION 's3://[BUCKET-NAME]/nyctaxitrips/';
+);
 
 -- Creating 'trip_statistics' Table in OpenSearch
 
