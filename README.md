@@ -1,7 +1,7 @@
 # Streamlined-Real-Time-Data-Processing-with-Amazon-Kinesis
 
 ## Project Workflow 
-This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch.
+This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch. 
 
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
@@ -129,84 +129,9 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
   
 - **Creation of the `trip_statistics` table in OpenSearch.** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
 - A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
-- 
 - An **aggregation query to insert summarized data** into the `trip_statistics` table. --> Future Analysis and Visualisation
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</br>
-
-
-
----
-
-
-## Setting up the Environment for Kinesis
-
-The CF template defined above comprises the resources we'd need before starting off with our project:-
-
-**_a) VPC:_**
-Includes Security Groups for the Cloud9 Instance - for secure Development & Testing Environments.
-
-**_b) Cloud9 Instance:_**
-A t3.medium instance configured with Amazon Linux 2 - Serving as an IDE for exploring Kinesis Client Library & code.
-
-**_c) S3 Buckets:_**
-Two buckets, one for storing the original Taxi Trip dataset,  another for receiving curated data from the Kinesis Data Firehose.
-
-**_d) Glue Database:_**
-A database setup within AWS Glue - Centralized Repository for Kinesis Data Analytics Studio application source & target tables.
-
-**_e) Kinesis Analytics Role:_** 
-IAM role with fine-grained permissions for Kinesis Analytics operations - Securing Access & Execution
-
-**_f) Kinesis Analytics Studio Application:_** 
-Zeppelin & Flink Runtime Environments - To support interactive analytics and insights generation.
-
-**_g) Lambda Functions:_** 
-Includes functions for custom Data Processing and initiating Kinesis Analytics Studio applications.
-
-**_h) OpenSearch Instance:_**
- Analytics engine for Data Exploration.
-
-**_Outputs:_**:
-S3 bucket names, Cloud9 environment URL, Lambda function ARN, Glue database name, and more for reference and access.
 
 
 
