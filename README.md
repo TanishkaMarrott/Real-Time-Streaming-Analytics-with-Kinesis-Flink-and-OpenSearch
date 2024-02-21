@@ -123,12 +123,14 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
 
 ### What does the Flink Application Code include?
 
-- **Connector configurations** for both the Kinesis data stream and OpenSearch. We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
+- **Connector configurations** We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
   
 - Creation of the **`taxi_trips`** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
   
 - **Creation of the `trip_statistics` table in OpenSearch.** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
+  
 - A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
+  
 - An **aggregation query to insert summarized data** into the `trip_statistics` table. --> Future Analysis and Visualisation
 
 
