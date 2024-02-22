@@ -21,7 +21,7 @@ There's been a strong emphasis on Design Considerations that align with the over
   - [Services](#service-utilised)
   - [The Workflow](#the-workflow)
   - [The Flink Application Codebase](#the-flink-application-codebase)
-- [Conclusion](#conclusion)
+- [Wrap-Up](#wrap-up)
 - [Acknowledgements](#acknowledgements)
 
 
@@ -161,7 +161,7 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
   
 - Have performed Future Analysis and Visualisation through an **aggregation query to insert summarized data** into the `trip_statistics` table.
 
-## Conclusion
+## Wrap-Up
 
 _So, finally yes! We're through!_
 
