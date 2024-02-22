@@ -8,7 +8,7 @@ There's been a strong emphasis on Design Considerations that align with the over
 
 - [Project Workflow](#project-workflow)
 - [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
-  - [AWS Service Utilised](#aws-service-utilised)
+  - [Service Utilised](#service-utilised)
   - [Primary Objective](#primary-objective)
   - [Key Design Considerations I've Made](#key-design-considerations-ive-made)
 - [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
@@ -18,7 +18,7 @@ There's been a strong emphasis on Design Considerations that align with the over
   - [Preliminary Transformation through Lambda](#preliminary-transformation-through-lambda)
   - [Design Considerations Here](#design-considerations-here)
 - [Stream Processing & Enhancement](#stream-processing--enhancement)
-  - [Service Utilised](#service-utilised)
+  - [Services](#service-utilised)
   - [The Workflow](#the-workflow)
   - [What does the Flink Application Code include?](#what-does-the-flink-application-code-include)
 - [Conclusion](#conclusion)
@@ -28,7 +28,7 @@ There's been a strong emphasis on Design Considerations that align with the over
 
 ## The Data Ingestion Layer - Specifics
 
-#### AWS Service Utilised
+#### Service Utilised
 Kinesis Data Streams
 
 #### Primary Objective
@@ -133,7 +133,7 @@ Function has been designed to handle errors, generating responses for each proce
 
 ## **Stream Processing & Enhancement**
 
-**_Service Utilised_** Kinesis Data Analytics (KDA)
+**_Services_** Kinesis Data Analytics (KDA)
 
 **_The Workflow_** This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
 
