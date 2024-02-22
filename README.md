@@ -1,20 +1,41 @@
 # Real-Time Streaming Analytics with Kinesis, Flink and OpenSearch
 
-## Project Workflow 
 This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch. 
 
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
+## Index
+
+- [Project Workflow](#project-workflow)
+- [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
+  - [AWS Service Utilised](#aws-service-utilised)
+  - [Primary Objective](#primary-objective)
+  - [Key Design Considerations Made](#key-design-considerations-made)
+- [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
+- [Strategy Leveraged for Effective Thread Management](#strategy-leveraged-for-effective-thread-management)
+- [The Data Transformation Layer](#the-data-transformation-layer)
+  - [Why Firehose + Glue?](#why-firehose--glue)
+  - [Preliminary Transformation through Lambda](#preliminary-transformation-through-lambda)
+  - [Design Considerations Here](#design-considerations-here)
+- [Stream Processing & Enhancement](#stream-processing--enhancement)
+  - [Service Utilised](#service-utilised)
+  - [The Workflow](#the-workflow)
+  - [What does the Flink Application Code include?](#what-does-the-flink-application-code-include)
+- [Conclusion](#conclusion)
+
+
+## Project Workflow 
+
 ## The Data Ingestion Layer - Specifics
 
-_**AWS Service Utilised:-**_ 
+#### AWS Service Utilised
 Kinesis Data Streams
 
-_**Primary Objective:-**_
+#### Primary Objective
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 
 
-### Key Design Considerations I've made:-
+### Key Design Considerations made
 
 _**How do we inject the Data?**_ 
 
@@ -51,14 +72,14 @@ We've incorporated **parallelism and concurrency** by deploying an **`ExecutorSe
 And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
 </br>
 
-## Strategy I've leveraged for Effective Thread Management
+## Strategy leveraged for Effective Thread Management
 
-**_The Pain-Point:-_** 
+### **_The Pain-Point:-_** 
 
 Submitting a task to the _'`ExecutorService`'_ is asynchronous. However, upon submitting the task, it returns a `Future` object immediately, which helps in tracking the status and retrieving the result at a later point.
 _**`Future.get()` forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
 
-**_Our Solution:-_**
+### **_Our Solution:-_**
 
 _`ExecutorService`_ + _`CompletableFuture`_
 
@@ -77,16 +98,16 @@ It's fully managed, and scales automatically to match the throughput of incoming
 &#8594; Rationale behind using Glue:- As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
-### Preliminary Transformation through Lambda:-
+### Preliminary Transformation through Lambda
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **converts pickupDate and dropoffDate fields to ISO 8601 format.** Having decoded the records from base-64, it **inserts the source 'NYCTAXI' column.**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
 
 </br>
 
-### Design Considerations Here:-
+### Design Considerations Here
 
-**_Data Format Transformation:-_** 
+**_Data Format Transformation_** 
 
 &#8594; In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
  
@@ -112,9 +133,9 @@ Function has been designed to handle errors, generating responses for each proce
 
 ## **Stream Processing & Enhancement**
 
-**_Service Utilised:-_** Kinesis Data Analytics (KDA)
+**_Service Utilised_** Kinesis Data Analytics (KDA)
 
-**_The Workflow:-_** This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
+**_The Workflow_** This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
 
 The streaming data is then processed using a **Flink Application** deployed on  **Kinesis Data Analytics**. Flink excels at **extracting real-time insights** from Streaming Data. So when its **Huge Volumes + Huge Velocity**, Flink goes beyond traditional SQL.
 It's also useful for some **complex eventful processing**, windowing, and **stateful computations** / operations.
