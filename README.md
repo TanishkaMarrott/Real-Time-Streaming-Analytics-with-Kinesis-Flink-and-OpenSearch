@@ -10,9 +10,9 @@ There's been a strong emphasis on Design Considerations that align with the over
 - [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
   - [AWS Service Utilised](#aws-service-utilised)
   - [Primary Objective](#primary-objective)
-  - [Key Design Considerations Made](#key-design-considerations-made)
+  - [Key Design Considerations I've Made](#key-design-considerations-ive-made)
 - [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
-- [Strategy Leveraged for Effective Thread Management](#strategy-leveraged-for-effective-thread-management)
+- [Strategy I've Leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
 - [The Data Transformation Layer](#the-data-transformation-layer)
   - [Why Firehose + Glue?](#why-firehose--glue)
   - [Preliminary Transformation through Lambda](#preliminary-transformation-through-lambda)
@@ -35,7 +35,7 @@ Kinesis Data Streams
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 
 
-### Key Design Considerations made
+### Key Design Considerations I've Made
 
 _**How do we inject the Data?**_ 
 
@@ -72,7 +72,7 @@ We've incorporated **parallelism and concurrency** by deploying an **`ExecutorSe
 And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
 </br>
 
-## Strategy leveraged for Effective Thread Management
+## Strategy I've leveraged for Effective Thread Management
 
 ### **_The Pain-Point:-_** 
 
