@@ -110,13 +110,17 @@ Function has been designed to handle errors, generating responses for each proce
 
 ### _**Conversion of Source record format:-**_
 
- In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
+ In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation.
+ **conversion from JSON to Parquet format**. 
+ 
+ Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
  
   </br>
   
-### _Optimising the Buffer Size and Interval:-_
+### _Optimising the Buffer Size and Interval-_
 
 &#8594; I've opted to **_maximize the Buffer Interval time_** for data delivery into **Amazon S3**. 
+
 **Rationale behind this:-** By allowing Data to accumulate in large batches before delivery, we're **reducing the number of PUT requests to S3**, thereby reducing transaction costs. This also results in **improvising the throughput** through batching and subsequent storage. Something around **300-600 seconds** would be a good number to start with.
 
 &#8594; Buffer Size has been maximised, Costs would be lowered, but at the cost of a **higher latency**. 
@@ -125,7 +129,7 @@ Function has been designed to handle errors, generating responses for each proce
 
   </br>
   
-### _Compression and Encryption for S3:-_
+### _Compression and Encryption for S3 -_
 
 &#8594; I've utilized **Snappy compression** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **high speed over a higher compression ratio**.
  
@@ -147,19 +151,19 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
 
 ## The Flink Application Codebase
 
-- **Connector configurations** We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
+-  We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
   
-- Creation of the **`taxi_trips`** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
+- Created **`taxi_trips`** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
   
-- **Creation of the `trip_statistics` table in OpenSearch.** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
+- **The `trip_statistics` table in OpenSearch.** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
   
 - A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
   
-- An **aggregation query to insert summarized data** into the `trip_statistics` table. --> Future Analysis and Visualisation
+- Have performed Future Analysis and Visualisation through an **aggregation query to insert summarized data** into the `trip_statistics` table.
 
 ## Conclusion
 
-So, finally yes! We're through!
+_So, finally yes! We're through!_
 
 Our pipeline does present an end-to-end solution for real-time data processing and analysis. It encompasses data ingestion, processing, storage, and visualization:
 
