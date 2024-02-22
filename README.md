@@ -15,29 +15,30 @@ There's been a strong emphasis on Design Considerations that align with the over
 - [Strategy I've Leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
 - [The Data Transformation Layer](#the-data-transformation-layer)
   - [Why Firehose + Glue?](#why-firehose--glue)
-  - [Preliminary Transformation through Lambda](#preliminary-transformation-through-lambda)
-  - [Design Considerations Here](#design-considerations-here)
-- [Stream Processing & Enhancement](#stream-processing--enhancement)
+  - [Data Enrichment through Lambda](#data-enrichment-through-lambda)
+  - [Design Considerations in this layer](#design-considerations-in-this-layer)
+- [Stream Processing & Visualisation](#stream-processing--visualisation)
   - [Services](#service-utilised)
   - [The Workflow](#the-workflow)
-  - [What does the Flink Application Code include?](#what-does-the-flink-application-code-include)
+  - [The Flink Application Codebase](#the-flink-application-codebase)
 - [Conclusion](#conclusion)
+- [Acknowledgements](#acknowledgements)
 
 
 ## Project Workflow 
 
 ## The Data Ingestion Layer - Specifics
 
-#### Service Utilised
+### _Service Utilised_
 Kinesis Data Streams
 
-#### Primary Objective
+### _Primary Objective_
 Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
 
 
-### Key Design Considerations I've Made
+## Key Design Considerations I've Made
 
-_**How do we inject the Data?**_ 
+### The Data Injection Mechanism
 
   I've leveraged Kinesis Producer Library for constructing our Data Producers. 
   Quick Breakdown:-
@@ -55,7 +56,7 @@ _**How do we inject the Data?**_
  
   </br>
 
-_**What about the Capacity Mode?**_
+### KDS Capacity Mode
 
 I've opted for the **On-demand Capacity Mode** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
 
@@ -90,7 +91,7 @@ I've used a combination of both, since `CompletableFuture` provides non-blocking
 ## The Data Transformation Layer
 Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
-### _Why Firehose + Glue?_
+### Why Firehose + Glue?
 
 &#8594; We'd be using KDF for capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
 It's fully managed, and scales automatically to match the throughput of incoming data. However, tt can help with _minimal _processing
@@ -98,51 +99,51 @@ It's fully managed, and scales automatically to match the throughput of incoming
 &#8594; Rationale behind using Glue:- As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
-### Preliminary Transformation through Lambda
+## Data Enrichment through Lambda
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **converts pickupDate and dropoffDate fields to ISO 8601 format.** Having decoded the records from base-64, it **inserts the source 'NYCTAXI' column.**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
 
 </br>
 
-### Design Considerations Here
+## Design Considerations in this layer
 
-**_Data Format Transformation_** 
+### **Data Format Transformation:-** 
 
-&#8594; In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
+ In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation. A key aspect of this is **conversion from JSON to Parquet format**. Couple of Reasons here- **a) Significantly reduces Storage Costs**. **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
  
   </br>
   
-**_Buffer Interval Optimisation:-_**
+### Buffer Interval Optimisation
 
 &#8594; I've opted to **_maximize the Buffer Interval time_** for data delivery into **Amazon S3**. 
 **Rationale behind this:-** By allowing Data to accumulate in large batches before delivery, we're **reducing the number of PUT requests to S3**, thereby reducing transaction costs. This also results in **improvising the throughput** through batching and subsequent storage. Something around **300-600 seconds** would be a good number to start with.
-
 &#8594; Buffer Size has been maximised, Costs would be lowered, but at the cost of a **higher latency**. 
-
 &#8594; Cranking up the Buffer Interval to **900 seconds** (max possible) would be a relative choice. ***We need to strike balance between the **timely availability of data versus the operational costs** incurred.****
  
   </br>
-  
-**_S3 Compression and Encryption:-_**
+
+### S3 Compression and Encryption:-
 
 &#8594; I've utilized **Snappy compression** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **high speed over a higher compression ratio**.
  
 &#8594; **Encryption** is implemented through **AWS-owned keys** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
 
-## **Stream Processing & Enhancement**
+## **Stream Processing & Visualisation**
 
-**_Services_** Kinesis Data Analytics (KDA)
+### **_Services_** 
+Kinesis Data Analytics (KDA)
 
-**_The Workflow_** This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
+### **_The Workflow_** 
+This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
 
 The streaming data is then processed using a **Flink Application** deployed on  **Kinesis Data Analytics**. Flink excels at **extracting real-time insights** from Streaming Data. So when its **Huge Volumes + Huge Velocity**, Flink goes beyond traditional SQL.
 It's also useful for some **complex eventful processing**, windowing, and **stateful computations** / operations.
 
 OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
 
-### What does the Flink Application Code include?
+## The Flink Application Codebase
 
 - **Connector configurations** We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
   
@@ -168,6 +169,12 @@ Using Flink in Kinesis Data Analytics for real-time, complex data processing.
 **Data Storage and Visualization:** S3 for durable storage of processed data.
 OpenSearch for data querying, analysis, and visualization.
 
+
+
+## Acknowledgments
+
+Really appreciate AWS Workshops for their resources and support in this project's development.
+ [AWS Workshops](https://www.aws.training/learningobject/curriculum?id=20685).
 
 
 
