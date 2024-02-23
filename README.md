@@ -27,6 +27,10 @@ There's been a strong emphasis on Design Considerations that align with the over
 
 ## Project Workflow 
 
+![Real-Time Streaming Analytics with Kinesis](https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/2b74ea3e-7324-46b4-a9dc-7c5a7b7b3959)
+
+
+
 ## The Data Ingestion Layer - Specifics
 
 ### _Service Utilised_
