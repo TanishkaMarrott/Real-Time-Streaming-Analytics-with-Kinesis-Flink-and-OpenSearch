@@ -33,7 +33,7 @@ There's been a strong emphasis on Design Considerations that align with the over
 Kinesis Data Streams
 
 ### _Primary Objective_
-Capturing & ingesting extensive streams of real-time data, serving as a pivotal bridge between data producers and consumers.
+Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
 
 
 ## Key Design Considerations I've Made
