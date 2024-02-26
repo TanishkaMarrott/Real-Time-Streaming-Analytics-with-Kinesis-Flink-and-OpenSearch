@@ -6,26 +6,26 @@ Services leveraged include  Kinesis, Lambda, Glue, OpenSearch.
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design,  
 I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
-## Index
+# Real-Time Streaming Analytics with Kinesis, Flink and OpenSearch
 
-- [Project Workflow](#project-workflow)
-- [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
-  - [Service Utilised](#service-utilised)
-  - [Primary Objective](#primary-objective)
-  - [Key Design Considerations I've Made](#key-design-considerations-ive-made)
-- [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
-- [Strategy I've Leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
-- [The Data Transformation Layer](#the-data-transformation-layer)
-  - [Why Firehose + Glue?](#why-firehose--glue)
-  - [Data Enrichment through Lambda](#data-enrichment-through-lambda)
-  - [Design Considerations in this layer](#design-considerations-in-this-layer)
-- [Stream Processing & Visualisation](#stream-processing--visualisation)
-  - [Services](#service-utilised)
-  - [The Workflow](#the-workflow)
-  - [The Flink Application Codebase](#the-flink-application-codebase)
-- [Wrap-Up](#wrap-up)
-- [Acknowledgements](#acknowledgements)
-
+## Table of Contents
+1. [Project Workflow](#project-workflow)
+2. [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
+   - [Key Design Considerations](#key-design-considerations-ive-made)
+     - [The Data Injection Mechanism](#the-data-injection-mechanism)
+     - [Which Capacity Mode did I opt for ?](#which-capacity-mode-did-i-opt-for)
+3. [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
+4. [Strategy I've leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
+5. [Data Transformation Layer for this architecture](#data-transformation-layer-for-this-architecture)
+   - [Why did I use Firehose & Glue](#why-did-i-use-firehose--glue)
+   - [Lambda for Data Transformation](#lambda-for-data-transformation)
+   - [Design Considerations](#design-considerations)
+6. [Stream Processing & Visualisation](#stream-processing--visualisation)
+   - [Services](#services)
+   - [The Workflow](#the-workflow)
+   - [The Flink Application Codebase](#the-flink-application-codebase)
+7. [Wrapping it Up](#wrapping-it-up)
+8. [Acknowledgements](#acknowledgements)
 
 ## Project Workflow 
 
@@ -35,11 +35,11 @@ I've prioritized scalability, fault tolerance, security, and performance optimiz
 
 ## The Data Ingestion Layer - Specifics
 
-### _Service Utilised:-_
+**_Service Utilised:-_**  
 Kinesis Data Streams
 
-### _Objective:-_
-Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
+ _**Objective:-**_  
+ Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
 
 
 ## Key Design Considerations I've Made
@@ -92,7 +92,7 @@ I've used a combination of both, since `CompletableFuture` provides non-blocking
 
 Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
-### _Why did I use Firehose + Glue?_
+### _Why did I use Firehose & Glue?_ 
 
 &#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
 It's fully managed, and scales automatically to match the throughput of incoming data. However, it can help with only _minimal _processing
