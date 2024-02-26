@@ -1,8 +1,10 @@
 # Real-Time Streaming Analytics with Kinesis, Flink and OpenSearch
 
-This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution. Services leveraged include  Kinesis, Lambda, Glue, OpenSearch. 
+This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution.  
+Services leveraged include  Kinesis, Lambda, Glue, OpenSearch. 
 
-There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design, I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
+There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design,  
+I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
 ## Index
 
@@ -33,43 +35,39 @@ There's been a strong emphasis on Design Considerations that align with the over
 
 ## The Data Ingestion Layer - Specifics
 
-### _Service Utilised_
+### _Service Utilised:-_
 Kinesis Data Streams
 
-### _Primary Objective_
+### _Objective:-_
 Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
 
 
 ## Key Design Considerations I've Made
 
-### The Data Injection Mechanism
+### _The Data Injection Mechanism_
 
-  I've leveraged Kinesis Producer Library for constructing our Data Producers. 
-  Quick Breakdown:-
+  I've leveraged **_Kinesis Producer Library_** for constructing our Data Producers.  
   
-  </br>
+  My Quick Breakdown:-
   
-
-| **Feature** | **Description** |
+| **What it does?** | **What does it mean?** |
 |-------------|-----------------|
-| **Aggregates multiple records into a single PUT request** | Reduces operational overhead & **improves throughput**. |
-| **Handles requests asynchronously** | **Decouples** the Data Production Logic from Stream Interaction, ensuring steady data production pace, unaffected by latency in Stream Interactions. |
-| **Implements graceful Error Handling** | Defines criteria for retry attempts upon failure, enhancing **resilience and reliability**. |
-| **Compresses data** to reduce transmitted data volume | Optimizes **bandwidth usage** and reduces costs. |
-| **Collects Metrics** on Data production & Stream Interaction | - Metrics related to **data volume** for capacity estimation. - Stream Interaction metrics, like **latency**, provide insights into the data ingestion process's performance and health. |
- 
-  </br>
+| Aggregates records | Combines multiple records ---> enhance throughput and reduce overhead. |
+| Asynchronous requests | Separates data production from stream interaction ---> uninterrupted data flow. |
+| Error handling | Strategically retries failures to boost system resilience. |
+| Data compression | Minimizes Data transmission size to save costs and bandwidth. |
+| Metrics collection | Gathers data on volume and latency. This helps identify performance bottlenecks. |
 
-### KDS Capacity Mode
+### _Which Capacity Mode did I opt for?_
 
-I've opted for the **On-demand Capacity Mode** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
+I've opted for the **_On-demand Capacity Mode_** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
 
-With this mode, the capacity of the data stream **scales automatically** based on the incoming data volume, ensuring that I **don't need to predefine or manage shard capacities**. This flexibility is crucial for **accommodating sudden spikes** in data ingestion rates or **adjusting to changing application demands**.
+With this mode, the capacity of the data stream **_scales automatically_** based on the incoming data volume, ensuring that I **don't need to predefine or manage shard capacities**. This flexibility is crucial for **_accommodating sudden spikes_** in data ingestion rates or **adjusting to changing application demands**.
   </br>
 
 ## The Producer Codebase - In a Gist
-In our project, the **Kinesis Producer** is developed in Java, tailored to handle **NYC Taxi Telemetry Data**. 
 
+In our project, the **Kinesis Producer** is developed in Java, tailored to handle **NYC Taxi Telemetry Data**. 
 The code begins by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like **Record Buffer Time** and **Maximum Connections**.
 
 We've incorporated **parallelism and concurrency** by deploying an **`ExecutorService`** with a fixed thread pool size, optimizing scalability and throughput. The integration of **`CompletableFuture`** with `ExecutorService` facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
@@ -93,17 +91,19 @@ I've used a combination of both, since `CompletableFuture` provides non-blocking
 </br>
 
 ## The Data Transformation Layer
+
 Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
 
-### Why Firehose + Glue?
+### _Why did I use Firehose + Glue?_
 
-&#8594; We'd be using KDF for capturing and loading streaming data reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
-It's fully managed, and scales automatically to match the throughput of incoming data. However, tt can help with _minimal _processing
+&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+It's fully managed, and scales automatically to match the throughput of incoming data. However, it can help with only _minimal _processing
 
-&#8594; Rationale behind using Glue:- As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
+**_Rationale behind using Glue_**  
+As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **Athena can use the Schema Information from the Data Catalog for querying data stored in S3.**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
-## Data Enrichment through Lambda
+## Lambda? For enriching the data...
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **converts pickupDate and dropoffDate fields to ISO 8601 format.** Having decoded the records from base-64, it **inserts the source 'NYCTAXI' column.**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
@@ -153,30 +153,30 @@ It's also useful for some **complex eventful processing**, windowing, and **stat
 
 OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
 
-## The Flink Application Codebase
+## _The Flink Application Codebase_
 
 -  We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
   
-- Created **`taxi_trips`** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
+- Created **`_taxi_trips_`** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
   
 - **The `trip_statistics` table in OpenSearch.** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
   
-- A **series of analytical queries to extract insights** such as average trip duration, distance, peak travel times, and frequent locations.
+- A **_series of analytical queries to extract insights_** such as average trip duration, distance, peak travel times, and frequent locations.
   
-- Have performed Future Analysis and Visualisation through an **aggregation query to insert summarized data** into the `trip_statistics` table.
+- Have performed Future Analysis and Visualisation through an **_aggregation query to insert summarized data_** into the `trip_statistics` table.
 
-## Wrap-Up
+## Wrapping it Up
 
 _So, finally yes! We're through!_
 
 Our pipeline does present an end-to-end solution for real-time data processing and analysis. It encompasses data ingestion, processing, storage, and visualization:
 
-**Data Ingestion with Kinesis Data Streams:** Efficiently captures streaming data.
+**_Data Ingestion with Kinesis Data Streams:_** Efficiently captures streaming data.
 
-**Processing and Analysis:** With Kinesis Data Firehose for preliminary transformations and loading into S3.
+**_Processing and Analysis:_** With Kinesis Data Firehose for preliminary transformations and loading into S3.
 Using Flink in Kinesis Data Analytics for real-time, complex data processing.
 
-**Data Storage and Visualization:** S3 for durable storage of processed data.
+**_Data Storage and Visualization:_** S3 for durable storage of processed data.
 OpenSearch for data querying, analysis, and visualization.
 
 
