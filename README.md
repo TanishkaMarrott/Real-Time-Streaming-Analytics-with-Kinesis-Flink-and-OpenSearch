@@ -6,7 +6,6 @@ Services leveraged include  Kinesis, Lambda, Glue, OpenSearch.
 There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design,  
 I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
 
-# Real-Time Streaming Analytics with Kinesis, Flink and OpenSearch
 
 ## Table of Contents
 1. [Project Workflow](#project-workflow)
