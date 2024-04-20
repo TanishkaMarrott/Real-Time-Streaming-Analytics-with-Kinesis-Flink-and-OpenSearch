@@ -1,11 +1,15 @@
-# Real-Time Streaming Analytics with Kinesis, Flink and OpenSearch
+# Real-Time Streaming Analytics pipeline with Kinesis, Flink and OpenSearch
 
-This Real-time Streaming pipeline integrates Data Processing with Data Ingestion, Transformation, Storage, Analysis, and Visualization, creating a robust end-to-end solution.  
+This project is all around building a Real-time Streaming Analytics System.
 
-Services leveraged include  Kinesis, Lambda, Glue, OpenSearch. 
+</br>
 
-There's been a strong emphasis on Design Considerations that align with the overarching Architectural Design,  
-I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.
+> ➡️ **It's more of an end-to-end solution designed to integrate data ingestion, processing & visualisation --> into one cohesive pipeline 👍**
+Services we've leveraged include --> Kinesis, Lambda, Glue, OpenSearch. 
+
+</br>
+
+Intent:- **Our core focus has been on design considerations** that align with the overarching Architectural Design, **I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.**
 
 
 ## Table of Contents
