@@ -1,106 +1,101 @@
 # Real-Time Streaming Analytics pipeline with Kinesis, Flink and OpenSearch
 
-This project is all around building a Real-time Streaming Analytics System.
+Core idea:-    
+
+**We've integrated data ingestion, processing, storage and data visualisation --> into a single cohesive pipeline**.    
+and have utilised **Kinesis, Lambda, Glue & OpenSearch.**
 
 </br>
 
-> ➡️ **It's more of an end-to-end solution designed to integrate data ingestion, processing & visualisation --> into one cohesive pipeline 👍**
-Services we've leveraged include --> Kinesis, Lambda, Glue, OpenSearch. 
+Our point of emphasis:-   
+
+➡️ **We've optimised for non-functional aspects &rarr; scalability and performance throughout.**
 
 </br>
-
-Intent:- **Our core focus has been on design considerations** that align with the overarching Architectural Design, **I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.**
-
-
-## Table of Contents
-1. [Project Workflow](#project-workflow)
-2. [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
-   - [Key Design Considerations](#key-design-considerations-ive-made)
-     - [The Data Injection Mechanism](#the-data-injection-mechanism)
-     - [Which Capacity Mode did I opt for ?](#which-capacity-mode-did-i-opt-for)
-3. [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
-4. [Strategy I've leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
-5. [Data Transformation Layer for this architecture](#data-transformation-layer-for-this-architecture)
-   - [Why did I use Firehose & Glue](#why-did-i-use-firehose--glue)
-   - [Lambda? For enriching & transforming the data...](#lambda-for-enriching--transforming-the-data)
-   - [Design Considerations yet again](#design-considerations-yet-again)
-6. [Stream Processing & Visualisation](#stream-processing--visualisation)
-   - [Services](#services)
-   - [The Workflow](#the-workflow)
-   - [The Flink Application Codebase](#the-flink-application-codebase)
-7. [Wrapping it Up](#wrapping-it-up)
-8. [Acknowledgements](#acknowledgements)
 
 ## Project Workflow 
 
 ![Real-Time Streaming Analytics with Kinesis (1)](https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/99edb176-7c2f-485d-bae0-b32629942201)
 
+---
 
-## The Data Ingestion Layer - Specifics
+## Specifics into the Data Ingestion Layer
 
-**_Service Utilised:-_**  
-Kinesis Data Streams
+**We've utilised Kinesis Data Streams** for the ingestion layer --> C**aptures and stores real-time streaming data**
 
- _**Objective:-**_  
- Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
-
-
-## Key Design Considerations I've Made
-
-### _The Data Injection Mechanism_
-
-  I've leveraged **_Kinesis Producer Library_** for constructing our Data Producers.  
-  
-  My Quick Breakdown:-
-  
-| **What it does?** | **What does it mean?** |
-|-------------|-----------------|
-| Aggregates records | Combines multiple records ---> enhance throughput and reduce overhead. |
-| Asynchronous requests | Separates data production from stream interaction ---> uninterrupted data flow. |
-| Error handling | Strategically retries failures to boost system resilience. |
-| Data compression | Minimizes Data transmission size to save costs and bandwidth. |
-| Metrics collection | Gathers data on volume and latency. This helps identify performance bottlenecks. |
-
-### _Which Capacity Mode did I opt for?_
-
-I've opted for the **_On-demand Capacity Mode_** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
-
-With this mode, the capacity of the data stream **_scales automatically_** based on the incoming data volume, ensuring that I **don't need to predefine or manage shard capacities**. This flexibility is crucial for **_accommodating sudden spikes_** in data ingestion rates or **adjusting to changing application demands**.
-  </br>
-
-## The Producer Codebase - In a Gist
-
-In our project, the **Kinesis Producer** is developed in Java, tailored to handle **NYC Taxi Telemetry Data**. 
-The code begins by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like **Record Buffer Time** and **Maximum Connections**.
-
-We've incorporated **parallelism and concurrency** by deploying an **`ExecutorService`** with a fixed thread pool size, optimizing scalability and throughput. The integration of **`CompletableFuture`** with `ExecutorService` facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
-
-And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
 </br>
 
-## Strategy I've leveraged for Effective Thread Management
+Sharing the kinesis producer's workflow, we've used:-
 
-### **_The Pain-Point:-_** 
+## The KPL Workflow
 
-Submitting a task to the _'`ExecutorService`'_ is asynchronous. However, upon submitting the task, it returns a `Future` object immediately, which helps in tracking the status and retrieving the result at a later point.
-_**`Future.get()` forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
+            We'll first create the kinesis producer configuration               
+          - This is where we'll specify the parameters like timeout, maxConnections, etc                 
+                                ⬇️     
+           We will then initialise a kinesis producer instance with the said configurations    
+                                ⬇️     
+            Extracts the data from the telemetry csv we've provided     
+                                ⬇️     
+            Each row in the CSV will then be converted into a `Trip` object    
+                                ⬇️    
+          
 
-### **_Our Solution:-_**
 
-_`ExecutorService`_ + _`CompletableFuture`_
+## What design considerations have we opted for?
+</br>
 
-I've used a combination of both, since `CompletableFuture` provides non-blocking methods like `thenApply()` and `thenCombine()` to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
+>  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
+
+</br>
+
+### A --> Opted for the _On-demand capacity mode_ for KDS**
+           
+We wanted our data stream to scale automatically when there're variations in the workload.
+
+> **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
+
+
+## B --> Improvised on thread management for increasing our solution's throughput 
+
+
+### Our original approach - When we used only `ExecutorService`:-
+
+Point 1 :-Tasks submitted to the  `ExecutorService` operate asynchronously.                
+Point 2:- It immediately returns the `future` object. That's something we use for monitoring the task's status & retrieving results later. 
+
+
+> Potential Red Flag 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes.** 
+
+</br>
+
+### How did we overcome this challenge?
+
+#### Combining **`ExecutorService` + `CompletableFuture`** 💡
+
+
+What did we achieve ?      
+**My entire workflow is now fully asynchronous. => Operational Efficiency => Improved throughput**
+
+</br>
+
+---
 
 ## Data Transformation Layer for this architecture
 
-Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
+Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_. 
+
+</br>
 
 ### _Why did I use Firehose & Glue?_ 
 
-&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
-It's fully managed, and scales automatically to match the throughput of incoming data. However, it can help with only _minimal _processing
+</br>
 
-**_Rationale behind using Glue_**  
+&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+
+> _KDF can help with only minimal processing_
+
+**_Rationale behind using Glue:-_**  
+
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **_Athena can use the Schema Information from the Data Catalog for querying data stored in S3._**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
@@ -138,18 +133,32 @@ Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a r
  
 &#8594; **_Encryption_** is implemented through **_AWS-owned keys_** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
+</br>
 
 ## **Stream Processing & Visualisation**
 
-### **_Services_** 
-Kinesis Data Analytics (KDA)
+The **key service we've used here is Kinesis Data Analytics (KDA)**
 
-### **_The Workflow_** 
-This is **Workflow #2** , As we've mentioned, Data is ingested through KDS in the form of JSON Blobs. 
+</br>
 
-The streaming data is then processed using a **Flink Application** deployed on  **Kinesis Data Analytics**. Flink excels at **extracting real-time insights** from Streaming Data. So when its **Huge Volumes + Huge Velocity**, Flink goes beyond traditional SQL.
-It's also useful for some **complex eventful processing**, windowing, and **stateful computations** / operations.
+### **How does this workflow look like?**
 
+⚙️ This is **Workflow #2**     
+
+As we've mentioned, data is ingested through KDS in the form of JSON Blobs. 
+
+We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**. 
+
+</br>
+
+> **I used Flink over SQL.** Why? Because Flink excels at **extracting real-time insights from streaming data**.
+>    
+>So when my equation is = **Huge Volumes + Huge Velocity**, the answer has to be Flink    
+> Also, **whenever we're encountered with eventful processing**, some complex computations, Flink wins over SQL
+
+</br>
+
+Plus OpenSearch for some serach and analytics
 OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
 
 ## _The Flink Application Codebase_
@@ -164,20 +173,37 @@ OpenSearch is a really powerful **Visualiser**, it's designed to work on **Strea
   
 - Have performed Future Analysis and Visualisation through an **_aggregation query to insert summarized data_** into the `trip_statistics` table.
 
+</br>
+
 ## Wrapping it Up
 
-_So, finally yes! We're through!_
+Thank you so much for accompanying me on my journey.
 
-Our pipeline does present an end-to-end solution for real-time data processing and analysis. It encompasses data ingestion, processing, storage, and visualization:
+I'll quickly summarise all that we've done:-
 
-**_Data Ingestion with Kinesis Data Streams:_** Efficiently captures streaming data.
+### **Workflow - 1 :- Data Ingestion to Storage**
 
-**_Processing and Analysis:_** With Kinesis Data Firehose for preliminary transformations and loading into S3.
-Using Flink in Kinesis Data Analytics for real-time, complex data processing.
+   Ingested data via Kinesis Data Streams     
+         ⬇      
+   Transferred to S3 via Firehose    
+         ⬇        
+    Managed Schema in Glue       
+         ⬇      
+   Enriched & Standardised data via Lambda     
+         ⬇    
+   Stored in S3
 
-**_Data Storage and Visualization:_** S3 for durable storage of processed data.
-OpenSearch for data querying, analysis, and visualization.
+ </br>
+ 
+### **Workflow 2:- Stream Processing and Visualization**    
 
+Flink Application on KDA Studio for real-time processing    
+                ⬇     
+Aggregating the data     
+                ⬇    
+S3 as Durable Data Store   
+                ⬇   
+Visualising the data with OpenSearch     
 
 
 ## Acknowledgements
