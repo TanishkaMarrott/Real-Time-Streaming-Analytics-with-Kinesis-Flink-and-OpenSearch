@@ -9,7 +9,7 @@ and have utilised **Kinesis, Lambda, Glue & OpenSearch.**
 
 Our point of emphasis:-   
 
-➡️ **We've optimised for scalability, fault tolerance, security and performance across all components**
+➡️ **We've optimised for non-functional aspects &rarr; scalability and performance throughout.**
 
 </br>
 
@@ -24,70 +24,72 @@ Our point of emphasis:-
 
 </br>
 
-> It's actually **like a bridge connecting my data producers with the consumers**
+## What design considerations have we opted for?
+
+>  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
 
 </br>
 
-## What design considerations have we opted for?
-
-The decisions we've made here are mostly centred around **ensuring we've a fairly good level of scalability, fault tolerance and reliability**
-
 ### A --> Capacity Mode:-
 
-**We've chosen the _On-demand capacity mode._**
+**Chose the _On-demand capacity mode._**
 
-Reason:-            
+✅ Reason:-            
 We wanted our stream to scale automatically when there're variations in the workload.
 
 </br>
 
-> **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data**
+> **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
 
+</br>
 
 --> Please  refer to the `EnhancedProducer.java` for the KPL Code
 
+</br>
 
-## How did we actually ensure an effective thread management?
-
-### Approach 1 - When we used only ExecutorService
-
-Step 1 --> Tasks submitted to the  `ExecutorService` operate asynchronously.                
-Step 2 --> It immediately returns the `future` object. That's something we use for monitoring the task's status & retrieving results later.
-
-
-➡️ **`Future.get()` forces the calling thread to wait, until the task completes.** 
+## How did we actually ensure an effective thread management? 
 
 </br>
 
-> **This means we're blocking the thread. Our solution is only "partially asynchronous" NOT recommended. This hampers our efficiency.**
+### Our initial approach - When we used only `ExecutorService`:-
+
+ Point 1 :-Tasks submitted to the  `ExecutorService` operate asynchronously.                
+Point 2:- It immediately returns the `future` object. That's something we use for monitoring the task's status & retrieving results later. 
+
+
+> Potential Red Flag 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes.** 
 
 </br>
 
-### Approach 2 - How we solved this?
+### How did we overcome this challenge?
 
-### **_`ExecutorService`_ + _`CompletableFuture`_**
-
-**I've used a combination of both, since `CompletableFuture` provides non-blocking methods** like `thenApply()` and `thenCombine()` to handle asynchronous task results. 
-
-IMPORTANT --> These execute post the completion of Future.
+#### Combining **`ExecutorService` + `CompletableFuture`** 💡
 
 </br>
 
-> 👍My entire workflow is now fully asynchronous. This means I can  chain and manage tasks without blocking the calling thread.
+
+
+What did we achieve ?      
+**My entire workflow is now fully asynchronous. => Operational Efficiency => Improved throughput**
 
 </br>
-
 
 ## Data Transformation Layer for this architecture
 
-Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_.
+Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_. 
+
+</br>
 
 ### _Why did I use Firehose & Glue?_ 
 
-&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
-It's fully managed, and scales automatically to match the throughput of incoming data. However, it can help with only _minimal _processing
+</br>
 
-**_Rationale behind using Glue_**  
+&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+
+> _KDF can help with only minimal processing_
+
+**_Rationale behind using Glue:-_**  
+
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **_Athena can use the Schema Information from the Data Catalog for querying data stored in S3._**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
