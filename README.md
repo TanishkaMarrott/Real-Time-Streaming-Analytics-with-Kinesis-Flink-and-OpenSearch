@@ -21,11 +21,11 @@ Our point of emphasis:-
 
 ## Specifics into the Data Ingestion Layer
 
-**We've utilised Kinesis Data Streams** for the ingestion layer --> C**aptures and stores real-time streaming data**
+**We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data**
 
 </br>
 
-Sharing the kinesis producer's workflow, we've used:-
+Sharing the kinesis producer's workflow, we've used please check the file `Enhanced_producer.java`
 
 ## The KPL Workflow
 
@@ -39,9 +39,10 @@ Sharing the kinesis producer's workflow, we've used:-
             Each row in the CSV will then be converted into a `Trip` object    
                                 ⬇️    
           
-
+</br>
 
 ## What design considerations have we opted for?
+
 </br>
 
 >  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
@@ -54,17 +55,21 @@ We wanted our data stream to scale automatically when there're variations in the
 
 > **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
 
+</br>
 
-## B --> Improvised on thread management for increasing our solution's throughput 
-
-
-### Our original approach - When we used only `ExecutorService`:-
-
-Point 1 :-Tasks submitted to the  `ExecutorService` operate asynchronously.                
-Point 2:- It immediately returns the `future` object. That's something we use for monitoring the task's status & retrieving results later. 
+### B --> Improvised on thread management for increasing our solution's throughput 
 
 
-> Potential Red Flag 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes.** 
+#### Our original approach - When we used only `ExecutorService`:-
+
+Point 1 :- Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.     
+
+Point 2:- It immediately returns the `future` object.                                     
+That's something we use for monitoring the task's status & retrieving results later. 
+
+</br>
+
+> Potential Red Flag 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes and it receives the result.** 
 
 </br>
 
@@ -82,15 +87,15 @@ What did we achieve ?
 
 ## Data Transformation Layer for this architecture
 
-Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**_. 
+**We'd be using Kinesis Data Firehose + Glue for this layer**
 
 </br>
 
-### _Why did I use Firehose & Glue?_ 
+### Why did we use Firehose & Glue? 
 
 </br>
 
-&#8594; We'd be using **_KDF for capturing and loading streaming data_** reliably into Data Stores / Analytical Tools (In our case, S3 would be our Data Store).
+&#8594; We'd be using **KDF for capturing and loading streaming data** reliably into S3
 
 > _KDF can help with only minimal processing_
 
@@ -99,14 +104,18 @@ Here, I'd be using _**Kinesis Data Firehose**_, in conjuction with _**AWS Glue**
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **_Athena can use the Schema Information from the Data Catalog for querying data stored in S3._**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
 
+</br>
+
 ## Lambda? For enriching & transforming the data...
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
 
-## Design Considerations yet again
+</br>
 
-### _**Converting the source record format:-**_
+## Design Considerations for the transformation layer
+
+### _A -->**Converting the source record format:-**_
 
  In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation.
  **conversion from JSON to Parquet format**. 
@@ -114,10 +123,13 @@ Function has been designed to handle errors, generating responses for each proce
  Couple of Reasons here-  
  **a) Significantly reduces Storage Costs**.  
  **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
+
+</br>
   
 ### _Optimising the Buffer Size & Interval:-_
 
  I've opted to **_maximize the Buffer Interval time_** for data delivery into **_Amazon S3_**. 
+</br>
 
 **_Rationale behind this:-_**  
 By allowing Data to accumulate in large batches before delivery, we're **_reducing the number of PUT requests to S3_**, thereby reducing transaction costs. This also results in **_improvising the throughput_** through batching and subsequent storage. Something around **_300-600 seconds_** would be a good number to start with.
@@ -127,6 +139,8 @@ Buffer Size has been maximised, Costs would be lowered, but **_at the cost of a 
 Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a relative choice.  
 ***Point to Note:-- We need to strike balance between the **timely availability of data versus the operational costs** incurred.****
 
+</br>
+
 ### _Snappy Compression 'n' Encryption for S3 -_
 
 &#8594; I've utilized **_Snappy compression_** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **_high speed over a higher compression ratio*_*.
@@ -135,13 +149,11 @@ Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a r
 
 </br>
 
-## **Stream Processing & Visualisation**
+## ***Workflow #2:- Stream Processing & Visualisation**
 
 The **key service we've used here is Kinesis Data Analytics (KDA)**
 
 </br>
-
-### **How does this workflow look like?**
 
 ⚙️ This is **Workflow #2**     
 
@@ -158,20 +170,30 @@ We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**.
 
 </br>
 
-Plus OpenSearch for some serach and analytics
-OpenSearch is a really powerful **Visualiser**, it's designed to work on **Streaming data**, and the high level of **scalability** that comes with it. It's used for **searching, storing and analysing** Streaming data, Log Data. It's a Search and Analytics Engine, synonymous to **Historical Data Analysis**, and Visualisation.
+Plus OpenSearch for some search and analytics ::
 
-## _The Flink Application Codebase_
+</br>
 
--  We've defined the Kinesis Connector, that enables the Flink App to read code from the Stream, and the OpenSearch Connector that enables writing processed storage in OpenSearch Connector, for storage and analysis
-  
-- Created **_`_taxi_trips_`_** table, which is linked to the Kinesis stream. This is not a real table --- This is virtually created in the Flink Ebvironment, It maps to the structure of KDS, facilitating its processing
-  
-- **_The `trip_statistics` table in OpenSearch._** This table would basically set up to store aggregated data in OS, like trip counts, and averageduration
-  
-- A **_series of analytical queries to extract insights_** such as average trip duration, distance, peak travel times, and frequent locations.
-  
-- Have performed Future Analysis and Visualisation through an **_aggregation query to insert summarized data_** into the `trip_statistics` table.
+### Why did we incorporate OpenSearch alongside Flink?
+
+Flink has amazing cpabailities ::
+
+</br>
+
+## How does the workflow actually look like?
+
+ **We've defined a Kinesis Connector for Flink** to read from the Stream            
+   &nbsp;    **↓**            
+**And an OpenSearch Connector** to write processed data to OpenSearch            
+   &nbsp;     **↓**                        
+**We've then created the taxi_trips table in Flink** and **then linked it to the Kinesis stream** --> _virtual data mapping_                        
+   &nbsp;     ↓            
+**Our trip_statistics table in OpenSearch will store aggregated data** --> trip counts and average duration            
+   &nbsp;     ↓                        
+**We'll then execute some analytical queries** --> Insights into some critical metrics                                    
+   &nbsp;     ↓            
+Finally, **some data aggregation & visualization with summarized data**            
+
 
 </br>
 
