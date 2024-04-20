@@ -1,35 +1,17 @@
 # Real-Time Streaming Analytics pipeline with Kinesis, Flink and OpenSearch
 
-This project is all around building a Real-time Streaming Analytics System.
+This project is all around **building a Real-time streaming analytics system.**          
+--> We've utilised - **Kinesis, Lambda, Glue, OpenSearch.**
 
 </br>
 
-> ➡️ **It's more of an end-to-end solution designed to integrate data ingestion, processing & visualisation --> into one cohesive pipeline 👍**
-Services we've leveraged include --> Kinesis, Lambda, Glue, OpenSearch. 
+>  ▶️ Data Ingestion + Processing + Storage + Visualisation =  A single cohesive pipeline      
 
 </br>
 
-Intent:- **Our core focus has been on design considerations** that align with the overarching Architectural Design, **I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.**
-
-
-## Table of Contents
-1. [Project Workflow](#project-workflow)
-2. [The Data Ingestion Layer - Specifics](#the-data-ingestion-layer---specifics)
-   - [Key Design Considerations](#key-design-considerations-ive-made)
-     - [The Data Injection Mechanism](#the-data-injection-mechanism)
-     - [Which Capacity Mode did I opt for ?](#which-capacity-mode-did-i-opt-for)
-3. [The Producer Codebase - In a Gist](#the-producer-codebase---in-a-gist)
-4. [Strategy I've leveraged for Effective Thread Management](#strategy-ive-leveraged-for-effective-thread-management)
-5. [Data Transformation Layer for this architecture](#data-transformation-layer-for-this-architecture)
-   - [Why did I use Firehose & Glue](#why-did-i-use-firehose--glue)
-   - [Lambda? For enriching & transforming the data...](#lambda-for-enriching--transforming-the-data)
-   - [Design Considerations yet again](#design-considerations-yet-again)
-6. [Stream Processing & Visualisation](#stream-processing--visualisation)
-   - [Services](#services)
-   - [The Workflow](#the-workflow)
-   - [The Flink Application Codebase](#the-flink-application-codebase)
-7. [Wrapping it Up](#wrapping-it-up)
-8. [Acknowledgements](#acknowledgements)
+**_Intent :-_**
+Our core focus has been on <ins>**design considerations**</ins> of its components - such that it aligns with my overarching design,            
+**I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.**
 
 ## Project Workflow 
 
@@ -38,58 +20,61 @@ Intent:- **Our core focus has been on design considerations** that align with th
 
 ## The Data Ingestion Layer - Specifics
 
-**_Service Utilised:-_**  
-Kinesis Data Streams
+**We've utilised Kinesis Data Streams for the ingestion layer** --> Captures and stores real-time streaming data 
 
- _**Objective:-**_  
- Capturing & ingesting real-time streaming data ---> serving as a pivotal bridge between data producers and consumers.
+> It's actually like a bridge connecting my data producers with the consumers
 
 
-## Key Design Considerations I've Made
+## What design considerations have we opted for?
 
-### _The Data Injection Mechanism_
+The decisions we've made here are mostly centred around **ensuring we've a fairly good level of scalability, fault tolerance and reliability**
 
-  I've leveraged **_Kinesis Producer Library_** for constructing our Data Producers.  
-  
-  My Quick Breakdown:-
-  
-| **What it does?** | **What does it mean?** |
-|-------------|-----------------|
-| Aggregates records | Combines multiple records ---> enhance throughput and reduce overhead. |
-| Asynchronous requests | Separates data production from stream interaction ---> uninterrupted data flow. |
-| Error handling | Strategically retries failures to boost system resilience. |
-| Data compression | Minimizes Data transmission size to save costs and bandwidth. |
-| Metrics collection | Gathers data on volume and latency. This helps identify performance bottlenecks. |
 
-### _Which Capacity Mode did I opt for?_
+### A --> Capacity Mode:-
 
-I've opted for the **_On-demand Capacity Mode_** for Kinesis Data Streams due to the _unpredictable and variable nature_ of my data stream's throughput requirements. 
+**We've chosen the _On-demand capacity mode._**
 
-With this mode, the capacity of the data stream **_scales automatically_** based on the incoming data volume, ensuring that I **don't need to predefine or manage shard capacities**. This flexibility is crucial for **_accommodating sudden spikes_** in data ingestion rates or **adjusting to changing application demands**.
-  </br>
+Reason:-            
+We wanted our stream to scale automatically when there're variations in the workload.
 
-## The Producer Codebase - In a Gist
-
-In our project, the **Kinesis Producer** is developed in Java, tailored to handle **NYC Taxi Telemetry Data**. 
-The code begins by parsing data from a CSV file into Trip Objects, then configures the Kinesis Producer with parameters like **Record Buffer Time** and **Maximum Connections**.
-
-We've incorporated **parallelism and concurrency** by deploying an **`ExecutorService`** with a fixed thread pool size, optimizing scalability and throughput. The integration of **`CompletableFuture`** with `ExecutorService` facilitates a fully **non-blocking asynchronous processing**, enhancing the efficiency of task management across threads.
-
-And finally, **graceful Error handling** is achieved through the output of shard IDs for success and logging of failures, ensuring a **robust Data Ingestion Layer**.
 </br>
 
-## Strategy I've leveraged for Effective Thread Management
+> **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data**
 
-### **_The Pain-Point:-_** 
 
-Submitting a task to the _'`ExecutorService`'_ is asynchronous. However, upon submitting the task, it returns a `Future` object immediately, which helps in tracking the status and retrieving the result at a later point.
-_**`Future.get()` forces the calling thread to wait. this makes the solution only partially asynchronous. Not recommended**_
+Please  refer to the `EnhancedProducer.java` for the KPL Code
 
-### **_Our Solution:-_**
 
-_`ExecutorService`_ + _`CompletableFuture`_
+## How did we actually ensure an effective thread management?
 
-I've used a combination of both, since `CompletableFuture` provides non-blocking methods like `thenApply()` and `thenCombine()` to handle asynchronous task results. These execute post the completion of Future. My entire workflow is now fully asynchronous. It allows chaining and managing tasks efficiently without blocking the calling thread.
+### Approach 1 - When we used only ExecutorService
+
+Step 1 --> Tasks submitted to the  `ExecutorService` operate asynchronously.                
+Step 2 --> It immediately returns the `future` object. That's something we use for monitoring the task's status & retrieving results later.
+
+
+➡️ **`Future.get()` forces the calling thread to wait, until the task completes.** 
+
+</br>
+
+> **This means we're blocking the thread. Our solution is only "partially asynchronous" NOT recommended. This hampers our efficiency.**
+
+</br>
+
+### Approach 2 - How we solved this?
+
+### **_`ExecutorService`_ + _`CompletableFuture`_**
+
+**I've used a combination of both, since `CompletableFuture` provides non-blocking methods** like `thenApply()` and `thenCombine()` to handle asynchronous task results. 
+
+IMPORTANT --> These execute post the completion of Future.
+
+</br>
+
+> 👍My entire workflow is now fully asynchronous. This means I can  chain and manage tasks without blocking the calling thread.
+
+</br>
+
 
 ## Data Transformation Layer for this architecture
 
