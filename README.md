@@ -1,17 +1,17 @@
 # Real-Time Streaming Analytics pipeline with Kinesis, Flink and OpenSearch
 
-This project is all around **building a Real-time streaming analytics system.**          
---> We've utilised - **Kinesis, Lambda, Glue, OpenSearch.**
+Core idea:-    
+
+**We've integrated data ingestion, processing, storage and data visualisation --> into a single cohesive pipeline**.    
+and have utilised **Kinesis, Lambda, Glue & OpenSearch.**
 
 </br>
 
->  ▶️ Data Ingestion + Processing + Storage + Visualisation =  A single cohesive pipeline      
+Our point of emphasis:-   
+
+➡️ **We've optimised for scalability, fault tolerance, security and performance across all components**
 
 </br>
-
-**_Intent :-_**
-Our core focus has been on <ins>**design considerations**</ins> of its components - such that it aligns with my overarching design,            
-**I've prioritized scalability, fault tolerance, security, and performance optimization across all system layers.**
 
 ## Project Workflow 
 
@@ -22,13 +22,15 @@ Our core focus has been on <ins>**design considerations**</ins> of its component
 
 **We've utilised Kinesis Data Streams for the ingestion layer** --> Captures and stores real-time streaming data 
 
-> It's actually like a bridge connecting my data producers with the consumers
+</br>
 
+> It's actually **like a bridge connecting my data producers with the consumers**
+
+</br>
 
 ## What design considerations have we opted for?
 
 The decisions we've made here are mostly centred around **ensuring we've a fairly good level of scalability, fault tolerance and reliability**
-
 
 ### A --> Capacity Mode:-
 
@@ -42,7 +44,7 @@ We wanted our stream to scale automatically when there're variations in the work
 > **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data**
 
 
-Please  refer to the `EnhancedProducer.java` for the KPL Code
+--> Please  refer to the `EnhancedProducer.java` for the KPL Code
 
 
 ## How did we actually ensure an effective thread management?
