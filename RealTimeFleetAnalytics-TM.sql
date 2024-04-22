@@ -1,4 +1,4 @@
--- Dropping existing tables if they exist and creating new tables with enhancements
+-- Dropping existing tables if they exist
 
 %flink.ssql(type=update)
 -- Remove the existing 'taxi_trips' table
@@ -19,8 +19,8 @@ CREATE TABLE taxi_trips (
     gcDistance DOUBLE, 
     tripDuration INTEGER, 
     googleDistance INTEGER,
-    googleDuration INTEGER,
-    fareAmount DOUBLE  -- Assuming fare amount is available for revenue calculations
+    googleDuration INTEGER
+
 ) WITH (
     'connector' = 'kinesis',
     'stream' = 'input-stream',
@@ -76,13 +76,8 @@ SELECT
 FROM taxi_trips
 WHERE pickupLatitude <> 0 AND pickupLongitude <> 0 AND dropoffLatitude <> 0 AND dropoffLongitude <> 0;
 
--- Additional Functional Queries
+-- Additional  Queries
 
-%flink.ssql(type=update)
--- Calculate total revenue per vendor
-SELECT vendorId, SUM(fareAmount) AS total_revenue
-FROM taxi_trips
-GROUP BY vendorId;
 
 %flink.ssql(type=update)
 -- Find top 10 most visited drop-off locations
