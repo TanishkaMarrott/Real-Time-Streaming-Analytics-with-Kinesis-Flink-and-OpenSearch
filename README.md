@@ -2,16 +2,18 @@
 
 Core idea:-    
 
-**We've integrated data ingestion, processing, storage and data visualisation --> into a single cohesive pipeline**.    
+**We've integrated the primary phases -->  data ingestion, processing, storage & visualisation --> into a single cohesive pipeline**.    
 and have utilised **Kinesis, Lambda, Glue & OpenSearch.**
 
 </br>
 
 Our point of emphasis:-   
 
-➡️ **We've optimised for non-functional aspects &rarr; scalability and performance throughout.**
+➡️ We've **optimised for non-functional aspects &rarr; scalability and performance throughout.**
 
 </br>
+
+--
 
 ## Project Workflow 
 
@@ -19,26 +21,46 @@ Our point of emphasis:-
 
 ---
 
+</br>
+
 ## Specifics into the Data Ingestion Layer
 
-**We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data**
+**We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data**    
+
+> Please make sure to check out this file --> `EnhancedProducer.java`
+
 
 </br>
 
-Sharing the kinesis producer's workflow, we've used please check the file `Enhanced_producer.java`
+## Quickly setting up the streaming pipeline
 
-## The KPL Workflow
+Sharing the workflow we've used for configuring our Kinesis producer:-
 
-            We'll first create the kinesis producer configuration               
-          - This is where we'll specify the parameters like timeout, maxConnections, etc                 
+</br>
+
+ We'll first **create the kinesis producer configuration**                           
+ This is where **we'll specify the parameters like timeout, maxConnections**, etc                 
                                 ⬇️     
-           We will then initialise a kinesis producer instance with the said configurations    
+   We will then **initialise a kinesis producer instance** with the said configurations    
                                 ⬇️     
-            Extracts the data from the telemetry csv we've provided     
+   **Extract the data from the telemetry csv** we've provided     
                                 ⬇️     
-            Each row in the CSV will then be converted into a `Trip` object    
+    Each row in the CSV **will then be converted into a `Trip` object**    
                                 ⬇️    
-          
+   We'll then set up an **Executor Service**                                    
+   **Helps us in sending data concurrently through multiple threads** --> improving throughput   
+                                ⬇️            
+**'Serialising' our trip objects** --> meaning we'll convert into JSON and to a ByteBuffer             
+                                ⬇️                
+We will then **send to our stream asynchronously using Completable Future**                                               
+                        ⬇️             
+**Check if our submission was successful and log shard id / error, as may be the case**            
+                        ⬇️                        
+**We'll shut down the Executor Service & KP gracefully** , while ensuring that all our tasks are completed without termination     
+                        ⬇️                                    
+                        End             
+                        
+           
 </br>
 
 ## What design considerations have we opted for?
@@ -49,7 +71,7 @@ Sharing the kinesis producer's workflow, we've used please check the file `Enhan
 
 </br>
 
-### A --> Opted for the _On-demand capacity mode_ for KDS**
+### A --> Opted for the _On-demand capacity mode_ for KDS
            
 We wanted our data stream to scale automatically when there're variations in the workload.
 
@@ -58,7 +80,6 @@ We wanted our data stream to scale automatically when there're variations in the
 </br>
 
 ### B --> Improvised on thread management for increasing our solution's throughput 
-
 
 #### Our original approach - When we used only `ExecutorService`:-
 
@@ -77,6 +98,15 @@ That's something we use for monitoring the task's status & retrieving results la
 
 #### Combining **`ExecutorService` + `CompletableFuture`** 💡
 
+We had to quickly transform our approach.                        
+We then integrated  `CompleteableFuture` along `ExecutorService` for managing our tasks asynchronously.
+
+▶️ `ExecutorService` will be responsible for managing the pool of threads. &rarr; That ensures we're executing tasks concurrently                        
+▶️ We've now got `CompletableFuture`. It helps us to manage tasks sequentially or even run them in parallel.
+
+
+> This means we're not blocking any threads, we can perform other operations without waiting for task completion
+
 
 What did we achieve ?      
 **My entire workflow is now fully asynchronous. => Operational Efficiency => Improved throughput**
@@ -87,7 +117,7 @@ What did we achieve ?
 
 ## Data Transformation Layer for this architecture
 
-**We'd be using Kinesis Data Firehose + Glue for this layer**
+Service we've utilised :- **Kinesis Data Firehose + Glue**
 
 </br>
 
@@ -99,7 +129,7 @@ What did we achieve ?
 
 > _KDF can help with only minimal processing_
 
-**_Rationale behind using Glue:-_**  
+**_Rationale behind using Glue:-_**
 
 As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **_Athena can use the Schema Information from the Data Catalog for querying data stored in S3._**
 (I've shared the Table Definition above, Firehose references this definition in Glue)
@@ -113,22 +143,26 @@ Function has been designed to handle errors, generating responses for each proce
 
 </br>
 
-## Design Considerations for the transformation layer
+## Design decisions we've made in the transformation layer
 
 ### _A -->**Converting the source record format:-**_
 
- In the scope of our project, **Kinesis Data Firehose** has been leveraged for both data delivery into S3 and preliminary data transformation.
- **conversion from JSON to Parquet format**. 
+ We've used **Kinesis Data Firehose** for  data delivery into S3 & some initial data transformation.
+
+ #### Why did we convert the format from JSON to Parquet? 
  
- Couple of Reasons here-  
- **a) Significantly reduces Storage Costs**.  
- **b) Parquet's columnar structure** allows for more efficient data querying in Athena.
+ A couple of reasons here:-
+ 
+ **--> It helps us reduce storage costs significantly**.  
+ 
+ **--> We were looking for an efficient kind of query mechanism for Athena**. And **Parquet's columnar structure** works very well.
 
 </br>
   
-### _Optimising the Buffer Size & Interval:-_
+### _B --> Optimising the buffer size & interval:-_
 
- I've opted to **_maximize the Buffer Interval time_** for data delivery into **_Amazon S3_**. 
+**We had to maximize the buffer interval time for data delivery into S3.**
+
 </br>
 
 **_Rationale behind this:-_**  
@@ -170,13 +204,14 @@ We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**.
 
 </br>
 
-Plus OpenSearch for some search and analytics ::
-
-</br>
-
 ### Why did we incorporate OpenSearch alongside Flink?
 
-Flink has amazing cpabailities ::
+Flink is awesome for _real-time data processing_
+
+> ➡️ **this means it'll help us in performing some complex computations, _as data flows through the system_**
+
+However, once we're done with processing, **OpenSearch will be our search and analytics engine                                                 
+--> It helps us in _actually extracting useful insights from the processed data + some data visualisation capabilities_**
 
 </br>
 
