@@ -65,11 +65,9 @@ We will then **send to our stream asynchronously using Completable Future**
 
 ## What design considerations have we opted for?
 
-</br>
 
 >  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
 
-</br>
 
 ### A --> Opted for the _On-demand capacity mode_ for KDS
            
@@ -116,19 +114,32 @@ What did we achieve ?
 
 ### C --> Dynamic Sizing of the thread pool. How?
 
-We decided to go in for a dynamically sized thread pool, with the **number of threads in the pool adapting to what our application actually needs to cater to.**
-
 A couple of reasons here:-
 
--->**We wanted to amp up our application responsiveness and scalability.** Sudden spikes =  ➡️ **Our threads must increase to prevent any sorts of performance degradation.**
+--> **Ours is more of a hybrid workload, It's a mix of CPU-Bound and I/O bound threads.** (It involves both computations as well as sending data to Kinesis)
+In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
+
+### Why did we go with such a heuristic (2 * the number of CPU Cores)?
+
+_Simple Answer:-_
+
+**A balanced resource utilisation**
+
+What does this mean?
+
+1 --> The factor of 2 means **we're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
+Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations.
+
+2 --> We're cognizant of the resources we're using --> There should neither be underutilisation or over-allocation.
 
 </br>
 
+> So, **irrespective of our environments, our application can quickly adapt to machines, making our application responsive and scalable from the get-go**
+>
 > This is **one of my strategy I often use whenever we're trying to optimize the software architecture itself to make it way more resource efficient plus scalable 👍.**
 
-</br>
 
---> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **Just in case, we're having off-peak times, it'll scale in the number of working threads** 
+3 --> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough
 
 ➡️ Resource efficient + Performance optimised 👍
 
