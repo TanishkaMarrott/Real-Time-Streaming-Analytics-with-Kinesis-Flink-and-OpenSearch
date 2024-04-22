@@ -25,7 +25,7 @@ Our point of emphasis:-
 
 ## Specifics into the Data Ingestion Layer
 
-**We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data**    
+**We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data    
 
 > Please make sure to check out this file --> `EnhancedProducer.java`
 
@@ -50,7 +50,7 @@ Sharing the workflow we've used for configuring our Kinesis producer:-
    We'll then set up an **Executor Service**                                    
    **Helps us in sending data concurrently through multiple threads** --> improving throughput   
                                 ⬇️            
-**'Serialising' our trip objects** --> meaning we'll convert into JSON and to a ByteBuffer             
+**'Serialising' our trip objects** --> meaning we'll convert into JSON and send to a ByteBuffer             
                                 ⬇️                
 We will then **send to our stream asynchronously using Completable Future**                                               
                         ⬇️             
@@ -113,7 +113,26 @@ What did we achieve ?
 
 </br>
 
----
+
+### C --> Dynamic Sizing of the thread pool. How?
+
+We decided to go in for a dynamically sized thread pool, with the **number of threads in the pool adapting to what our application actually needs to cater to.**
+
+A couple of reasons here:-
+
+-->**We wanted to amp up our application responsiveness and scalability.** Sudden spikes =  ➡️ **Our threads must increase to prevent any sorts of performance degradation.**
+
+</br>
+
+> This is **one of my strategy I often use whenever we're trying to optimize the software architecture itself to make it way more resource efficient plus scalable 👍.**
+
+</br>
+
+--> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **Just in case, we're having off-peak times, it'll scale in the number of working threads** 
+
+➡️ Resource efficient + Performance optimised 👍
+
+--
 
 ## Data Transformation Layer for this architecture
 
@@ -263,7 +282,8 @@ S3 as Durable Data Store
 Visualising the data with OpenSearch     
 
 
-## Acknowledgements
+
+## Acknowledgements & Attributions
 
 Really appreciate AWS Workshops for their resources and support in this project's development.
  [AWS Workshops](https://www.aws.training/learningobject/curriculum?id=20685).
