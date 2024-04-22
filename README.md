@@ -143,6 +143,17 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 ➡️ Resource efficient + Performance optimised 👍
 
+</br>
+
+### D --> We've implemented strategic retries + exponential backoffs
+
+**What did we achieve ? Strong availability + reliability**
+
+
+
+
+
+
 --
 
 ## Data Transformation Layer for this architecture
