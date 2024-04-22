@@ -1,7 +1,10 @@
--- Creating 'taxi_trips' Table with Kinesis Stream as Source
+-- Dropping existing tables if they exist and creating new tables with enhancements
 
 %flink.ssql(type=update)
-drop table if exists taxi_trips;
+-- Remove the existing 'taxi_trips' table
+DROP TABLE IF EXISTS taxi_trips;
+
+-- Create 'taxi_trips' table with data streamed from Kinesis
 CREATE TABLE taxi_trips (
     id STRING,
     vendorId INTEGER, 
@@ -16,7 +19,8 @@ CREATE TABLE taxi_trips (
     gcDistance DOUBLE, 
     tripDuration INTEGER, 
     googleDistance INTEGER,
-    googleDuration INTEGER
+    googleDuration INTEGER,
+    fareAmount DOUBLE  -- Assuming fare amount is available for revenue calculations
 ) WITH (
     'connector' = 'kinesis',
     'stream' = 'input-stream',
@@ -25,10 +29,11 @@ CREATE TABLE taxi_trips (
     'format' = 'json'
 );
 
--- Creating 'trip_statistics' Table in OpenSearch
-
 %flink.ssql(type=update)
-drop TABLE if exists trip_statistics;
+-- Remove the existing 'trip_statistics' table
+DROP TABLE IF EXISTS trip_statistics;
+
+-- Create 'trip_statistics' table in OpenSearch to store aggregated trip data
 CREATE TABLE trip_statistics (
     trip_count BIGINT,
     passenger_count INTEGER,
@@ -45,29 +50,59 @@ CREATE TABLE trip_statistics (
     'password' = 'YourPassword'
 );
 
--- Inserting Aggregated Data into 'trip_statistics'
+-- Aggregating and inserting data into 'trip_statistics'
 
 %flink.ssql(type=update)
+-- Insert aggregated data from 'taxi_trips' into 'trip_statistics'
 INSERT INTO trip_statistics
 SELECT 
-    COUNT(1) as trip_count, 
-    SUM(passengerCount) as passenger_count, 
-    SUM(tripDuration) as total_trip_duration,
-    AVG(tripDuration) as average_trip_duration, 
-    AVG(gcDistance) as average_trip_distance,
+    COUNT(1) AS trip_count, 
+    SUM(passengerCount) AS passenger_count, 
+    SUM(tripDuration) AS total_trip_duration,
+    AVG(tripDuration) AS average_trip_duration, 
+    AVG(gcDistance) AS average_trip_distance,
     (
         SELECT HOUR(pickupDate) 
         FROM taxi_trips 
         GROUP BY HOUR(pickupDate)
         ORDER BY COUNT(*) DESC
         LIMIT 1
-    ) as peak_hour,
+    ) AS peak_hour,
     (
         SELECT COUNT(*) 
         FROM taxi_trips 
-        GROUP BY HOUR(pickupDate)
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
-    ) as trips_during_peak
+        WHERE HOUR(pickupDate) = peak_hour
+    ) AS trips_during_peak
 FROM taxi_trips
 WHERE pickupLatitude <> 0 AND pickupLongitude <> 0 AND dropoffLatitude <> 0 AND dropoffLongitude <> 0;
+
+-- Additional Functional Queries
+
+%flink.ssql(type=update)
+-- Calculate total revenue per vendor
+SELECT vendorId, SUM(fareAmount) AS total_revenue
+FROM taxi_trips
+GROUP BY vendorId;
+
+%flink.ssql(type=update)
+-- Find top 10 most visited drop-off locations
+SELECT dropoffLatitude, dropoffLongitude, COUNT(*) AS visit_count
+FROM taxi_trips
+GROUP BY dropoffLatitude, dropoffLongitude
+ORDER BY visit_count DESC
+LIMIT 10;
+
+%flink.ssql(type=update)
+-- Analyze average trip duration changes over time
+SELECT DATE(pickupDate) AS trip_date, AVG(tripDuration) AS average_duration
+FROM taxi_trips
+GROUP BY DATE(pickupDate)
+ORDER BY trip_date;
+
+%flink.ssql(type=update)
+-- Determine peak travel times by weekday and hour
+SELECT DAYOFWEEK(pickupDate) AS weekday, HOUR(pickupDate) AS hour, COUNT(*) AS trip_count
+FROM taxi_trips
+GROUP BY DAYOFWEEK(pickupDate), HOUR(pickupDate)
+ORDER BY trip_count DESC;
+

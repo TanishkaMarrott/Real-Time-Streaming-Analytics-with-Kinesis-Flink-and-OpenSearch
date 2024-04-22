@@ -18,11 +18,11 @@ CREATE EXTERNAL TABLE `nyctaxitrips`
     `googleDuration` int, -- Duration of the trip
     `source` string -- Source of the data entry - This is the CSV in my case
 )
-PARTITIONED BY ( -- Partitioning the data for efficient query performance
-    `year` string, -- Partition by year
-    `month` string, -- Partition by month
-    `day` string, -- Partition by day
-    `hour` string -- Partition by hour
+PARTITIONED BY ( -- Partitioning the data --> for  query performance
+    `year` string, 
+    `month` string, 
+    `day` string, 
+    `hour` string 
 )
 ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe' -- Using Parquet format for efficient storage and querying
 STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat' 
