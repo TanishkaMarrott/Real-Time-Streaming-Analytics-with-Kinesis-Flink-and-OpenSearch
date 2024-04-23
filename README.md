@@ -69,7 +69,7 @@ We will then **send to our stream asynchronously using Completable Future**
 >  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
 
 
-### A --> Opted for the _On-demand capacity mode_ for KDS
+### A -->We've opted for the _On-demand capacity mode_ for KDS
            
 We wanted our data stream to scale automatically when there're variations in the workload.
 
@@ -77,7 +77,7 @@ We wanted our data stream to scale automatically when there're variations in the
 
 </br>
 
-### B --> Improvised on thread management for increasing our solution's throughput 
+### B --> We improvised on our thread management for increasing the solution's throughput 
 
 #### Our original approach - When we used only `ExecutorService`:-
 
@@ -147,7 +147,9 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 ### D --> We've implemented strategic retries + exponential backoffs
 
-**What did we achieve ? Strong availability + reliability**
+**What did we achieve ? Strong availability + reliability** ✅
+
+Strategic retries => 
 
 
 
