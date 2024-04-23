@@ -60,8 +60,7 @@ We will then **send to our stream asynchronously using Completable Future**
                         ⬇️                                    
                         End             
                         
-           
-</br>
+
 
 ## What design considerations have we opted for?
 
@@ -69,65 +68,66 @@ We will then **send to our stream asynchronously using Completable Future**
 >  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
 
 
-### A -->We've opted for the _On-demand capacity mode_ for KDS
+### A --> We've opted for the _on-demand capacity mode_ for KDS
            
-We wanted our data stream to scale automatically when there're variations in the workload.
-
-> **We do not need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
+Our data stream must scale automatically whenever there're variations in the workload.
 
 </br>
 
-### B --> We improvised on our thread management for increasing the solution's throughput 
+> **We do NOT need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
 
-#### Our original approach - When we used only `ExecutorService`:-
+</br>
+
+### B --> Improvised on our thread management for increasing the solution's throughput 
+
+#### Our original approach - wherein we've used only `ExecutorService`:-
 
 Point 1 :- Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.     
 
 Point 2:- It immediately returns the `future` object.                                     
-That's something we use for monitoring the task's status & retrieving results later. 
+(That's something we use for monitoring the task's status & retrieving results later. )
 
 </br>
 
-> Potential Red Flag 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes and it receives the result.** 
+> **Potential Red Flag** 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes(till it retrieves the result).** 
 
 </br>
 
 ### How did we overcome this challenge?
 
-#### Combining **`ExecutorService` + `CompletableFuture`** 💡
+We had to quickly tranform our approach. It was very crucial to have a fully asynchronuos workflow for sending data to Kinesis
 
-We had to quickly transform our approach.                        
-We then integrated  `CompleteableFuture` along `ExecutorService` for managing our tasks asynchronously.
+ **We then integrated** `CompletableFuture` **along with** `ExecutorService`💡
+                      
+➡️ `ExecutorService` will ONLY be responsible for managing the thread pool --> This only takes care of the concurrency aspect                   
+➡️ **We've now got `CompletableFuture.
+ **This means we're not blocking any threads, we can perform other operations without waiting for task completion**
 
-▶️ `ExecutorService` will be responsible for managing the pool of threads. &rarr; That ensures we're executing tasks concurrently                        
-▶️ We've now got `CompletableFuture`. It helps us to manage tasks sequentially or even run them in parallel.
+</br>
 
-
-> This means we're not blocking any threads, we can perform other operations without waiting for task completion
-
-
-What did we achieve ?      
+**What did we achieve ?**      
 **My entire workflow is now fully asynchronous. => Operational Efficiency => Improved throughput**
 
 </br>
 
-
-### C --> Dynamic Sizing of the thread pool. How?
+### C --> 
 
 A couple of reasons here:-
 
 --> **Ours is more of a hybrid workload, It's a mix of CPU-Bound and I/O bound threads.** (It involves both computations as well as sending data to Kinesis)
 In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
 
-### Why did we go with such a heuristic (2 * the number of CPU Cores)?
+#### Why did we go with such a heuristic? (2 * the number of CPU Cores)
+
+</br>
 
 _Simple Answer:-_
+**A balanced resource utilisation** 💡
+</br>
 
-**A balanced resource utilisation**
 
-What does this mean?
 
-1 --> The factor of 2 means **we're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
+1 -->  **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
 Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations.
 
 2 --> We're cognizant of the resources we're using --> There should neither be underutilisation or over-allocation.
@@ -145,13 +145,25 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 </br>
 
-### D --> We've implemented strategic retries + exponential backoffs
+### D --> We've implemented a retry + progressive backoff mechanism 
+
+
+> 1 --> **We wanted to implement some sort of error handling** mechanisms. 
+>
+> Point 1 --> It **helps me with the application's availability**. We'll be confident that **despite of temporary setbacks, our application will be well-equipped to run reliably** without any significant downtime
+>
+> Point 2 --> 
 
 **What did we achieve ? Strong availability + reliability** ✅
 
-Strategic retries => 
+</br>
 
+Strategic retries => 1 -> We'll re-attempt an operation multiple times, in case we're facing any transient errors. (That's particularly due to congestion issues / rate limits, timeout)    
+      a) We should have a retry policy --> What kind of criteria demands for a retry    
+      ➡️ The type of the error? Is it recoverable
+      ➡️ The number of attempts we've made - Or the max number of retry attempts
 
+Exponential backoffs => 
 
 
 
