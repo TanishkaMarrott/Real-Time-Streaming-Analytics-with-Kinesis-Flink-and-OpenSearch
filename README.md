@@ -13,17 +13,15 @@ Our point of emphasis:-
 
 </br>
 
---
 
 ## Project Workflow 
 
 ![Real-Time Streaming Analytics with Kinesis (1)](https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/99edb176-7c2f-485d-bae0-b32629942201)
 
----
 
 </br>
 
-## Specifics into the Data Ingestion Layer
+## Specifics into the data ingestion Layer
 
 **We've utilised Kinesis Data Streams** for capturing and storing real-time streaming data    
 
@@ -32,59 +30,24 @@ Our point of emphasis:-
 
 </br>
 
-## Quickly setting up the streaming pipeline
+       
+## What were our design considerations, while setting up the ingestion pipeline?
 
-Sharing the workflow we've used for configuring our Kinesis producer:-
-
-</br>
-
- We'll first **create the kinesis producer configuration**                           
- This is where **we'll specify the parameters like timeout, maxConnections**, etc                 
-                                ⬇️     
-   We will then **initialise a kinesis producer instance** with the said configurations    
-                                ⬇️     
-   **Extract the data from the telemetry csv** we've provided     
-                                ⬇️     
-    Each row in the CSV **will then be converted into a `Trip` object**    
-                                ⬇️    
-   We'll then set up an **Executor Service**                                    
-   **Helps us in sending data concurrently through multiple threads** --> improving throughput   
-                                ⬇️            
-**'Serialising' our trip objects** --> meaning we'll convert into JSON and send to a ByteBuffer             
-                                ⬇️                
-We will then **send to our stream asynchronously using Completable Future**                                               
-                        ⬇️             
-**Check if our submission was successful and log shard id / error, as may be the case**            
-                        ⬇️                        
-**We'll shut down the Executor Service & KP gracefully** , while ensuring that all our tasks are completed without termination     
-                        ⬇️                                    
-                        End             
-                        
-
-
-## What design considerations have we opted for?
-
-
->  **We had to ensure we've got a fairly good level of scalability, fault tolerance and reliability**
-
-
-### A --> We've opted for the _on-demand capacity mode_ for KDS
+### A --> Opted for the on-demand capacity mode for KDS
            
 Our data stream must scale automatically whenever there're variations in the workload.
-
-</br>
 
 > **We do NOT need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
 
 </br>
 
-### B --> Improvised on our thread management for increasing the solution's throughput 
+### B --> We had to improvise on our thread management for amping up the throughput 
 
-#### Our original approach - wherein we've used only `ExecutorService`:-
+#### Our original approach - Wherein we've used only `ExecutorService`:-
 
-Point 1 :- Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.     
+_Point 1 :-_ Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.     
 
-Point 2:- It immediately returns the `future` object.                                     
+_Point 2:-_ It immediately returns the `future` object.                                     
 (That's something we use for monitoring the task's status & retrieving results later. )
 
 </br>
@@ -95,18 +58,18 @@ Point 2:- It immediately returns the `future` object.
 
 ### How did we overcome this challenge?
 
-We had to quickly tranform our approach. It was very crucial to have a fully asynchronuos workflow for sending data to Kinesis
+We had to quickly tranform our approach. It was very crucial to have a fully asynchronuos workflow for sending data to Kinesis :
 
- **We then integrated** `CompletableFuture` **along with** `ExecutorService`💡
-                      
-➡️ `ExecutorService` will ONLY be responsible for managing the thread pool --> This only takes care of the concurrency aspect                   
-➡️ **We've now got `CompletableFuture.
- **This means we're not blocking any threads, we can perform other operations without waiting for task completion**
+**--> _Integrated `CompletableFuture` + `ExecutorService`**_**
+            
+PLEASE NOTE:- `ExecutorService` will only be responsible for managing the thread pool --> This only takes care of the concurrency aspect                  
+**We've now combined `CompletableFuture`,  means we're not blocking any threads, we can perform other operations without waiting for task completion**
 
 </br>
 
-**What did we achieve ?**      
-**My entire workflow is now fully asynchronous. => Operational Efficiency => Improved throughput**
+> What did we achieve ?
+>     
+> **My entire workflow is now fully asynchronous. ↪️ Operational Efficiency because we've now improved throughput**
 
 </br>
 
@@ -167,6 +130,53 @@ Exponential backoffs =>
 
 
 
+### The Producer Workflow
+
+**_We'll first create the Kinesis producer configuration:_**  
+This is where we'll specify the parameters like timeout, maxConnections, etc.
+
+⬇️
+
+We will then initialize a Kinesis producer instance with the said configurations.
+
+⬇️
+
+Extract the data from the telemetry CSV we've provided.
+
+⬇️
+
+Each row in the CSV will then be converted into a `Trip` object.
+
+⬇️
+
+We'll then set up an Executor Service.  
+Helps us in sending data concurrently through multiple threads, improving throughput.
+
+⬇️
+
+Serializing our trip objects:  
+Meaning we'll convert them into JSON and send to a ByteBuffer.
+
+⬇️
+
+We will then send to our stream asynchronously using CompletableFuture.
+
+⬇️
+
+Check if our submission was successful and log shard ID or error, as may be the case.
+
+⬇️
+
+We'll shut down the Executor Service and Kinesis Producer gracefully,  
+while ensuring that all our tasks are completed without abrupt termination.
+
+⬇️
+
+End
+
+---
+
+This format provides a straightforward and detailed step-by-step guide through your data processing pipeline, ensuring clarity and facilitating easy tracking of each stage in the process.
 
 --
 
