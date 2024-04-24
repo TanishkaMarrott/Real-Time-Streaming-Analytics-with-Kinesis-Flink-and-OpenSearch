@@ -133,11 +133,15 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 > 1 --> **We were adamant on implementing some sort of error handling mechanisms:-
 >
-> Point 1 --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
+> _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
 >
 >  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
 >
-> Point 2 --> Have a backoff mechanism in place, that progressively increases the time interval between two succesive 
+> _Point 2_ --> **Have a backoff mechanism in place, that progressively increases the time interval** between two successive retries,
+>
+> We're basically achieving 3 things here:-
+> **A - We're minimizing system workload, we aren't overwhelming our resources**
+> **B - We're making our application stable --> Even in face of failures, our application won't ** 
 
 **What did we achieve ? Strong availability + reliability** ✅
 
@@ -149,7 +153,6 @@ Strategic retries => 1 -> We'll re-attempt an operation multiple times, in case 
       ➡️ The number of attempts we've made - Or the max number of retry attempts
 
 Exponential backoffs => 
-
 
 
 
