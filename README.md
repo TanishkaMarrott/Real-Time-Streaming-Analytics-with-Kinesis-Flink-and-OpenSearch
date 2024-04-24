@@ -27,13 +27,31 @@ Our point of emphasis:-
 
 > Please make sure to check out this file --> `EnhancedProducer.java`
 
+</br>
+
+### The Producer Workflow
+
+We'll first create the Kinesis producer configuration                                     
+This is where we'll specify the parameters like timeout, maxConnections, etc.                     
+⬇️                     
+We will then initialize a Kinesis producer instance** with the said configurations.                     
+⬇️                     
+Extract the data from the telemetry CSV we've provided.                     
+Each row in the CSV will then be converted into a Trip object.                     
+⬇️                     
+We'll then set up an Executor Service.                       
+Helps us in sending data concurrently through multiple threads, improving throughput.                     
+⬇️                            
+We will then send to our stream asynchronously using CompletableFuture.                     
+⬇️                     
+Will check if our submission was successful and log shard ID or error, as may be the case.              
+We'll shut down the Executor Service and Kinesis Producer gracefully, while ensuring that all our tasks are completed without abrupt termination.              
 
 </br>
 
-       
-## What were our design considerations, while setting up the ingestion pipeline?
+## What sort of design decisions did we make for the ingestion layer?
 
-### A --> Opted for the on-demand capacity mode for KDS
+### A &rarr; _We opted for the _On-demand capacity mode_ for KDS:-_
            
 Our data stream must scale automatically whenever there're variations in the workload.
 
@@ -41,59 +59,60 @@ Our data stream must scale automatically whenever there're variations in the wor
 
 </br>
 
-### B --> We had to improvise on our thread management for amping up the throughput 
+### B &rarr; Had to optimize on the thread management mechanism
 
-#### Our original approach - Wherein we've used only `ExecutorService`:-
+#### Approach - I                     
+&rarr; When we relied only on `ExecutorService`:-
 
-_Point 1 :-_ Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.     
-
-_Point 2:-_ It immediately returns the `future` object.                                     
-(That's something we use for monitoring the task's status & retrieving results later. )
-
-</br>
-
-> **Potential Red Flag** 🚩:- **`Future.get()` forces the calling thread to wait, until the task completes(till it retrieves the result).** 
+Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.              
+It immediately returns the `future` object --> That's something we use for monitoring the task's status & retrieving results later.
 
 </br>
 
-### How did we overcome this challenge?
+> **Potential Red Flag** 🚩:- Future.get() forces the calling thread to wait, until the task completes(till it retrieves the result).
 
-We had to quickly tranform our approach. It was very crucial to have a fully asynchronuos workflow for sending data to Kinesis :
+</br>
 
-**--> _Integrated `CompletableFuture` + `ExecutorService`**_**
+### How did we overcome this challenge then?
+
+We had to quickly tranform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
+
+**--> _Integrated `CompletableFuture` + `ExecutorService`_**
             
-PLEASE NOTE:- `ExecutorService` will only be responsible for managing the thread pool --> This only takes care of the concurrency aspect                  
-**We've now combined `CompletableFuture`,  means we're not blocking any threads, we can perform other operations without waiting for task completion**
+KEY POINTS TO NOTE:- 
+
+_Point 1 :-_ `ExecutorService` will only be responsible for managing the thread pool --> This only takes care of the concurrency aspect                  
+
+_Point 2:-_ **Now, that we've combined `CompletableFuture`, means we're NOT blocking any thread, it can perform other operations without waiting for task completion** 💡
 
 </br>
 
-> What did we achieve ?
+> **What did we achieve ?**
 >     
-> **My entire workflow is now fully asynchronous. ↪️ Operational Efficiency because we've now improved throughput**
+> **My entire workflow is now fully asynchronous. ↪️ Operational efficient because we've now improved throughput** 👍
 
 </br>
 
-### C --> 
+### C &rarr; Dynamically sized thread pool 
 
 A couple of reasons here:-
 
---> **Ours is more of a hybrid workload, It's a mix of CPU-Bound and I/O bound threads.** (It involves both computations as well as sending data to Kinesis)
+--> **Ours is more of a hybrid workload. ➡️ It's a mix of CPU-Bound and I/O bound threads.** 
+(It involves both computations as well as sending data to Kinesis)
+
 In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
 
-#### Why did we go with such a heuristic? (2 * the number of CPU Cores)
+> #### Why did we go with such a heuristic? (2 * the number of CPU Cores)
+>
+> _Simple Answer:-_
+> **A balanced resource utilisation** 💡
 
 </br>
-
-_Simple Answer:-_
-**A balanced resource utilisation** 💡
-</br>
-
-
 
 1 -->  **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
 Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations.
 
-2 --> We're cognizant of the resources we're using --> There should neither be underutilisation or over-allocation.
+2 --> We're cognizant of the resources we're using --> **There should neither be underutilisation or over-allocation.** ✔️ 🏁
 
 </br>
 
@@ -101,6 +120,7 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 >
 > This is **one of my strategy I often use whenever we're trying to optimize the software architecture itself to make it way more resource efficient plus scalable 👍.**
 
+</br>
 
 3 --> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough
 
@@ -111,11 +131,13 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 ### D --> We've implemented a retry + progressive backoff mechanism 
 
 
-> 1 --> **We wanted to implement some sort of error handling** mechanisms. 
+> 1 --> **We were adamant on implementing some sort of error handling mechanisms:-
 >
-> Point 1 --> It **helps me with the application's availability**. We'll be confident that **despite of temporary setbacks, our application will be well-equipped to run reliably** without any significant downtime
+> Point 1 --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
 >
-> Point 2 --> 
+>  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
+>
+> Point 2 --> Have a backoff mechanism in place, that progressively increases the time interval between two succesive 
 
 **What did we achieve ? Strong availability + reliability** ✅
 
@@ -130,78 +152,24 @@ Exponential backoffs =>
 
 
 
-### The Producer Workflow
 
-**_We'll first create the Kinesis producer configuration:_**  
-This is where we'll specify the parameters like timeout, maxConnections, etc.
-
-⬇️
-
-We will then initialize a Kinesis producer instance with the said configurations.
-
-⬇️
-
-Extract the data from the telemetry CSV we've provided.
-
-⬇️
-
-Each row in the CSV will then be converted into a `Trip` object.
-
-⬇️
-
-We'll then set up an Executor Service.  
-Helps us in sending data concurrently through multiple threads, improving throughput.
-
-⬇️
-
-Serializing our trip objects:  
-Meaning we'll convert them into JSON and send to a ByteBuffer.
-
-⬇️
-
-We will then send to our stream asynchronously using CompletableFuture.
-
-⬇️
-
-Check if our submission was successful and log shard ID or error, as may be the case.
-
-⬇️
-
-We'll shut down the Executor Service and Kinesis Producer gracefully,  
-while ensuring that all our tasks are completed without abrupt termination.
-
-⬇️
-
-End
-
----
-
-This format provides a straightforward and detailed step-by-step guide through your data processing pipeline, ensuring clarity and facilitating easy tracking of each stage in the process.
-
---
 
 ## Data Transformation Layer for this architecture
 
-Service we've utilised :- **Kinesis Data Firehose + Glue**
+Services we've utilised :- **Kinesis Data Firehose + Glue**
+
+### What was our rationale behind using firehose plus glue?
+
+**We've used glue as a central metadata repository** through data catalog.               
+➡️ **Athena can then use this schema information for quering data in s3**. 
+
+> Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities** 
+
+> I've shared the Table Definition above, firehose references this definition in glue
 
 </br>
 
-### Why did we use Firehose & Glue? 
-
-</br>
-
-&#8594; We'd be using **KDF for capturing and loading streaming data** reliably into S3
-
-> _KDF can help with only minimal processing_
-
-**_Rationale behind using Glue:-_**
-
-As a central Metadata Repository through Data Catalog. The Schema Definitions it stores, enhances querying capabilities in Athena. **_Athena can use the Schema Information from the Data Catalog for querying data stored in S3._**
-(I've shared the Table Definition above, Firehose references this definition in Glue)
-
-</br>
-
-## Lambda? For enriching & transforming the data...
+## Some data enrichment plus transformation using lambda
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
@@ -273,10 +241,10 @@ We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**.
 
 Flink is awesome for _real-time data processing_
 
-> ➡️ **this means it'll help us in performing some complex computations, _as data flows through the system_**
+> ➡️ **This means it'll help us in performing some complex computations, _as data flows through the system_**
 
 However, once we're done with processing, **OpenSearch will be our search and analytics engine                                                 
---> It helps us in _actually extracting useful insights from the processed data + some data visualisation capabilities_**
+--> It helps us in _actually extracting useful insights from the processed data + some data visualisation capabilities_** 👍
 
 </br>
 
@@ -299,9 +267,9 @@ Finally, **some data aggregation & visualization with summarized data**
 
 ## Wrapping it Up
 
-Thank you so much for accompanying me on my journey.
+Thank you so much for accompanying me on my journey!
 
-I'll quickly summarise all that we've done:-
+I'll quickly summarise all that we've built today:-
 
 ### **Workflow - 1 :- Data Ingestion to Storage**
 
