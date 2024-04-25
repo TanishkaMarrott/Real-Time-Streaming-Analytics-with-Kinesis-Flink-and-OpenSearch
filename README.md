@@ -53,29 +53,35 @@ We'll shut down the Executor Service and Kinesis Producer gracefully, while ensu
 
 ### A &rarr; _We opted for the _On-demand capacity mode_ for KDS:-_
            
-Our data stream must scale automatically whenever there're variations in the workload.
+--> Our data stream _must scale automatically_ whenever there're variations in the workload.
 
-> **We do NOT need to manually handle shard capacities, It'll automatically scale based on the influx of data** 👍
+> **We do not need to manually handle shard capacities, it'll automatically scale based on the influx of streaming data** 👍
 
 </br>
 
 ### B &rarr; Had to optimize on the thread management mechanism
 
-#### Approach - I                     
-&rarr; When we relied only on `ExecutorService`:-
 
-Whenever we're submitting tasks to the  `ExecutorService`, they operate asynchronously.              
-It immediately returns the `future` object --> That's something we use for monitoring the task's status & retrieving results later.
+#### **Approach I** - wherein we exclusively used ExecutorService
+
+--> **Initially, we utilized _only_ ExecutorService to manage our pool of threads.**
+NOTE:- _This setup created a partially asynchronous workflow._
+
+Why partially asynchronous?
+While ExecutorService enables concurrent execution, allowing multiple tasks or threads to run in parallel, it only manages the submission of these tasks asynchronously. The retrieval of results, on the other hand, involves a blocking operation.
+
+> _Thus, while task submission occurs asynchronously, retrieving the results using the Future object does not._
 
 </br>
 
-> **Potential Red Flag** 🚩:- Future.get() forces the calling thread to wait, until the task completes(till it retrieves the result).
+> **Potential Red Flag** 🚩: The `Future.get()` method compels the calling thread to wait until the task completes which means we'e blocking the thread.
+> NOT RECOMMENDED. 
 
 </br>
 
 ### How did we overcome this challenge then?
 
-We had to quickly tranform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
+We had to quickly transform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
 
 **--> _Integrated `CompletableFuture` + `ExecutorService`_**
             
@@ -141,7 +147,7 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 >
 > We're basically achieving 3 things here:-
 > **A - We're minimizing system workload, we aren't overwhelming our resources**
-> **B - We're making our application stable --> Even in face of failures, our application won't ** 
+> **B - We're making our application stable --> Even in face of errors, our application would operate reliably,  ** 
 
 **What did we achieve ? Strong availability + reliability** ✅
 
@@ -213,7 +219,9 @@ Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a r
 
 ### _Snappy Compression 'n' Encryption for S3 -_
 
-&#8594; I've utilized **_Snappy compression_** for source records, which leads to faster transmission and cost savings in storage. I'm prioritising **_high speed over a higher compression ratio*_*.
+&#8594; I've utilized **_Snappy compression_** for source records
+
+> Why did we compress the records? Its equal to faster transmission plus cost savings in storage. I'm prioritising **_high speed over a higher compression ratio*_*.
  
 &#8594; **_Encryption_** is implemented through **_AWS-owned keys_** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
 
@@ -282,7 +290,7 @@ I'll quickly summarise all that we've built today:-
          ⬇        
     Managed Schema in Glue       
          ⬇      
-   Enriched & Standardised data via Lambda     
+   Enriched plus standardised data via Lambda     
          ⬇    
    Stored in S3
 
