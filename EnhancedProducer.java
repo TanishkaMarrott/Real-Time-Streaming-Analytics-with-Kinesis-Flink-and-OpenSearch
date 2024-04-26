@@ -19,6 +19,7 @@ public class EnhancedProducer {
 
     private static final String STREAM_NAME = "input-stream";
     private static final String REGION = "ap-northeast-1";
+    private static final int MAX_RETRIES = 3;  // Define the maximum number of retries
 
     public static void main(String[] args) {
         File tripCsv = new File("data/taxi-trips.csv");
@@ -35,9 +36,7 @@ public class EnhancedProducer {
         ExecutorService executor = Executors.newFixedThreadPool(coreCount * 2);
 
         try (KinesisProducer producer = new KinesisProducer(config)) {
-            for (Trip trip : trips) {
-                CompletableFuture.runAsync(() -> sendRecord(producer, trip), executor);
-            }
+            trips.forEach(trip -> CompletableFuture.runAsync(() -> sendRecord(producer, trip, 0, 100), executor));
 
             executor.shutdown();
             producer.flushSync();
@@ -53,31 +52,39 @@ public class EnhancedProducer {
         }
     }
 
-    private static void sendRecord(KinesisProducer producer, Trip trip) {
+    private static void sendRecord(KinesisProducer producer, Trip trip, int attemptCount, long backoff) {
         try {
             ByteBuffer data = ByteBuffer.wrap(new JSONObject(trip).toString().getBytes("UTF-8"));
             UserRecordResult result = producer.addUserRecord(STREAM_NAME, trip.getId(), data).get();
 
             if (result.isSuccessful()) {
                 System.out.println("Record posted to shard " + result.getShardId());
+            } else if (isRecoverableError(result) && attemptCount < MAX_RETRIES) {
+                System.err.println("Attempting to retry due to recoverable error... Attempt: " + attemptCount);
+                TimeUnit.MILLISECONDS.sleep(backoff);
+                sendRecord(producer, trip, attemptCount + 1, backoff * 2);  // Exponential backoff
             } else {
-                logFailure(result);
+                System.err.println("Failed to send record after " + MAX_RETRIES + " attempts or due to non-recoverable error");
             }
         } catch (Exception e) {
-            System.err.println("Failed to send record: " + e.getMessage());
-            e.printStackTrace();
+            if (isRecoverable(e.getMessage()) && attemptCount < MAX_RETRIES) {
+                System.err.println("Error during send, retrying... Error: " + e.getMessage() + " Attempt: " + attemptCount);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(backoff);
+                    sendRecord(producer, trip, attemptCount + 1, backoff * 2);  // Exponential backoff
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                System.err.println("Failed to send record after " + MAX_RETRIES + " attempts. Final Error: " + e.getMessage());
+            }
         }
     }
 
-    private static void logFailure(UserRecordResult result) {
-        result.getAttempts().forEach(attempt -> {
-            if (isRecoverable(attempt.getErrorCode())) {
-                System.err.println("Recoverable error, retrying: " + attempt.getErrorCode());
-                // Optionally implement retry logic here or log for manual retry
-            } else {
-                System.err.println("Non-recoverable error: " + attempt.getErrorCode() + ": " + attempt.getErrorMessage());
-            }
-        });
+    private static boolean isRecoverableError(UserRecordResult result) {
+        // Check attempts to determine if the error is recoverable
+        return result.getAttempts().stream()
+                     .anyMatch(attempt -> isRecoverable(attempt.getErrorCode()));
     }
 
     private static boolean isRecoverable(String errorCode) {
