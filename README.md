@@ -174,7 +174,12 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 </br>
 
-## Some data enrichment plus transformation using lambda
+## Data Transformations using lambda
+
+
+### Why didn't we actually use Lambda for complex data transformations?
+
+We decided to restrict the use of Llambda for light-weight simple data-processing and data validation steps here
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
@@ -213,7 +218,7 @@ Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a r
 
 </br>
 
-### _Snappy Compression 'n' Encryption for S3 -_
+### _Snappy Compression  Encryption for S3 -_
 
 &#8594; I've utilized **_Snappy compression_** for source records
 
