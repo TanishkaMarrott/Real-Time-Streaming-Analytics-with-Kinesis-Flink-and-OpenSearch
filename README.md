@@ -156,10 +156,10 @@ More so, it's a predictable system behaviour, We have a well-defined retry polic
 
 **What did we achieve ? Strong availability + reliability** ✅
 
----
+</br>
 
 
-## Data Transformation Layer for this architecture
+## Data transformation layer for this architecture
 
 Services we've utilised :- **Kinesis Data Firehose + Glue**
 
@@ -176,10 +176,13 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 ## Data Transformations using lambda
 
+### considerations before processing in lambda
 
-### Why didn't we actually use Lambda for complex data transformations?
+1 --> We had to weigh in the impact on downstream systems plus the user experience. This means the processing logic on Lambda shouldn't be too heavy. 
+2 --> Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained, especially if we're using a lot of lambda's memory or getting too close to the 15 minute cap on Lambda's execution.
+3--> 
 
-We decided to restrict the use of Llambda for light-weight simple data-processing and data validation steps here
+
 
 &#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
 Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
