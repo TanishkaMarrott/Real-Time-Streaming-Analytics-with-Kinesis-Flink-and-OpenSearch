@@ -176,16 +176,21 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 ## Data Transformations using lambda
 
-### considerations before processing in lambda
+### Considerations before processing in lambda
 
-1 --> We had to weigh in the impact on downstream systems plus the user experience. This means the processing logic on Lambda shouldn't be too heavy. 
-2 --> Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained, especially if we're using a lot of lambda's memory or getting too close to the 15 minute cap on Lambda's execution.
-3--> 
+1 --> **We had to weigh in the impact on downstream systems**. This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. (We don't want POFs)                      
+
+2 --> **Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.**          
+
+3--> This also means **we're bumping up our memory allocation, and compute costs.** For complex data transformations, and heavy data analytics, **we've got other alternatives that work out better given the use case and viability**                                            
 
 
+So, we went on with light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently)
 
-&#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
-Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
+➡️ Some initial data cleansing :- It'll quickly remove any corrupt/irrelevant data points, that do not require any complex logic to be identified
+➡️ Will also help us with some simple data transformations. Converting data formats for consistency --> such as all timestamps in ISO Format
+➡️
+
 
 </br>
 
