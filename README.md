@@ -61,10 +61,9 @@ We'll shut down the Executor Service and Kinesis Producer gracefully, while ensu
 
 ### B &rarr; Had to optimize on the thread management mechanism
 
-
 #### **Approach I** - wherein we exclusively used ExecutorService
 
---> **Initially, we utilized _only_ ExecutorService to manage our pool of threads.**
+--> **Initially, we utilized _only_ `ExecutorService` to manage our thread **
 NOTE:- _This setup created a partially asynchronous workflow._
 
 Why partially asynchronous?
@@ -137,30 +136,27 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 ### D --> We've implemented a retry + progressive backoff mechanism 
 
 
-> 1 --> **We were adamant on implementing some sort of error handling mechanisms:-
+1 --> We were adamant on implementing some sort of error handling mechanisms:-
 >
 > _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
 >
->  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
+  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
 >
-> _Point 2_ --> **Have a backoff mechanism in place, that progressively increases the time interval** between two successive retries,
+> </br>
 >
-> We're basically achieving 3 things here:-
-> **A - We're minimizing system workload, we aren't overwhelming our resources**
-> **B - We're making our application stable --> Even in face of errors, our application would operate reliably,  ** 
+> _Point 2_ --> **Plus a backoff mechanism in place, that progressively increases the time interval between two successive retries**                                 
+> We're basically achieving 3 things here:-  
+>
+>     A - We're minimizing system workload, we aren't overwhelming our resources                                
+>     B - We're making our application stable --> We'll limit the number of retries allowed, so, even in face of errors, our application would operate reliably (we do not want it to enter into a loop of infinite failures) 
+>     C - We end up improvising the data consistency and processing, handling errors GRACEFULLY ➡️ We're giving errors more time to resolve, by increasing the time interval between two subsequent retries
+
+
+More so, it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.
 
 **What did we achieve ? Strong availability + reliability** ✅
 
-</br>
-
-Strategic retries => 1 -> We'll re-attempt an operation multiple times, in case we're facing any transient errors. (That's particularly due to congestion issues / rate limits, timeout)    
-      a) We should have a retry policy --> What kind of criteria demands for a retry    
-      ➡️ The type of the error? Is it recoverable
-      ➡️ The number of attempts we've made - Or the max number of retry attempts
-
-Exponential backoffs => 
-
-
+---
 
 
 ## Data Transformation Layer for this architecture
@@ -168,7 +164,7 @@ Exponential backoffs =>
 Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 ### What was our rationale behind using firehose plus glue?
-
+                      
 **We've used glue as a central metadata repository** through data catalog.               
 ➡️ **Athena can then use this schema information for quering data in s3**. 
 
