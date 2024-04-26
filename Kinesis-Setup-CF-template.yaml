@@ -17,11 +17,13 @@ Parameters:
   KDADatabaseName:
     Type: String
     MinLength: "1"
+    MaxLength: 255
     Description: "Name of Database for KDA Application."
     Default: "kinesislab"
   KDAKinesisStreamName:
     Type: String
     MinLength: "1"
+    MaxLength: 255
     Description: "Name of Kinesis Stream for ingesting data."
     Default: "input-stream"
 
@@ -55,6 +57,9 @@ Resources:
             Status: Enabled
             ExpirationInDays: 90
             NoncurrentVersionExpirationInDays: 30
+      Tags:
+        - Key: "Project"
+          Value: "Kinesis Data Pipeline"
       
   CuratedDataSet:
     Type: AWS::S3::Bucket
@@ -76,6 +81,9 @@ Resources:
             Status: Enabled
             ExpirationInDays: 90
             NoncurrentVersionExpirationInDays: 30
+      Tags:
+        - Key: "Project"
+          Value: "Kinesis Data Pipeline"
 
 
 #Cloud9 Instance
@@ -260,25 +268,60 @@ Resources:
         ZipFile: |
           import base64
           import json
-          print('Loading function')
+          from datetime import datetime
+          import logging
+
+          # Setup logging
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
           def lambda_handler(event, context):
               output = []
               for record in event['records']:
-                  print(record['recordId'])
-                  payload = base64.b64decode(record['data']).decode('utf-8')
-                  reading =json.loads(payload)
-                  # Add additional column source
-                  reading['source'] ='NYCTAXI'
-                  # Do custom processing on the payload here
-                  output_record = {
-                      'recordId': record['recordId'],
-                      'result': 'Ok',
-                      #'data': base64.b64encode(payload.encode('utf-8')
-                      'data' : base64.b64encode(json.dumps(reading).encode('UTF-8'))
-                  }
-                  output.append(output_record)
-              print('Successfully processed {} records.'.format(len(event['records'])))
+                  try:
+                      payload = base64.b64decode(record['data']).decode('utf-8')
+                      data = json.loads(payload)
+                      
+                      # Validate data
+                      if not validate_data(data):
+                          logger.error(f"Data validation failed for record ID: {record['recordId']}")
+                          continue
+                      
+                      # Convert timestamps to ISO format
+                      data['pickupDate'] = convert_to_iso(data['pickupDate'])
+                      data['dropoffDate'] = convert_to_iso(data['dropoffDate'])
+                      
+                      # Serialize the data for output
+                      output_record = {
+                          'recordId': record['recordId'],
+                          'result': 'Ok',
+                          'data': base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
+                      }
+                      output.append(output_record)
+                  except Exception as e:
+                      logger.error(f"Error processing record ID: {record['recordId']} - {str(e)}")
+                      continue
+              
+              logger.info(f'Successfully processed {len(output)} records out of {len(event["records"])}')
               return {'records': output}
+
+          def validate_data(data):
+              """Perform simple data validation checks."""
+              try:
+                  return -180 <= float(data['pickupLongitude']) <= 180 and \
+                        -90 <= float(data['pickupLatitude']) <= 90
+              except (ValueError, KeyError) as e:
+                  logger.error(f"Validation error: {str(e)}")
+                  return False
+
+          def convert_to_iso(date_str):
+              """Convert date strings to ISO format if possible."""
+              try:
+                  return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').isoformat()
+              except ValueError as e:
+                  logger.error(f"Date conversion error: {str(e)}")
+                  return date_str  # Return original if conversion fails
+
 
       #Enabling AWS X-Ray to identifypotential bottlenecks
       TracingConfig:
