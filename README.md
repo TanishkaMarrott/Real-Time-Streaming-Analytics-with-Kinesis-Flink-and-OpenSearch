@@ -41,7 +41,8 @@ It'll read data from the telemetry CSV file --> standardising the format, making
 ↓                      
 We've then set up ExecutorService to manage multiple threads. Increased concurrency has a direct correlation with increased throughput                                      
 ↓                      
-I've discussed this below in much detail. We've utilised CompletableFuture for making my data ingestion process fully asynchronous to the Kinesis stream                      ↓                      
+I've discussed this below in much detail. We've utilised CompletableFuture for making my data ingestion process fully asynchronous to the Kinesis stream.      
+    ↓                         
 For data integrity/ reliability of the submissions, we'll check the responses ➡️ log successful shard IDs / capture error messages for the failed ones                      
 ↓                      
 As a non-functional enhancement, we'll have some graceful shutdown mechanisms in place, We'll ensure all our tasks are completed by shutting down the Executor Service and Kinesis Producer properly ▶️ Cost optimisation by freeing up resources we don't need + Preventing inadvertent data loss                        
