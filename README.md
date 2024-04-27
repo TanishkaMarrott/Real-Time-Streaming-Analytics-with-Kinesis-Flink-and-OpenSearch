@@ -16,7 +16,7 @@ Our point of emphasis:-
 
 ## Project Workflow 
 
-![Real-Time Streaming Analytics with Kinesis (1)](https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/99edb176-7c2f-485d-bae0-b32629942201)
+<img src="https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/e18c449f-3511-402f-a324-8d7db755ce38" alt="Diagram for Streaming Analytics" width="75%">
 
 
 </br>
@@ -29,23 +29,24 @@ Our point of emphasis:-
 
 </br>
 
-### The Producer Workflow
+### How does the Kinesis producer workflow look like? The setup of the ingestion part of the pipeline
 
-We'll first create the Kinesis producer configuration                                     
-This is where we'll specify the parameters like timeout, maxConnections, etc.                     
-⬇️                     
-We will then initialize a Kinesis producer instance** with the said configurations.                     
-⬇️                     
-Extract the data from the telemetry CSV we've provided.                     
-Each row in the CSV will then be converted into a Trip object.                     
-⬇️                     
-We'll then set up an Executor Service.                       
-Helps us in sending data concurrently through multiple threads, improving throughput.                     
-⬇️                            
-We will then send to our stream asynchronously using CompletableFuture.                     
-⬇️                     
-Will check if our submission was successful and log shard ID or error, as may be the case.              
-We'll shut down the Executor Service and Kinesis Producer gracefully, while ensuring that all our tasks are completed without abrupt termination.              
+**We'll first quickly initialize the producer's configuration**                                            
+**Need to have some crucial parameters like timeouts, maxconnections** in place, This will help optimize on kinesis' performance                                            
+↓                      
+**With all the necessary configurations specified, we'll instantiate the producer instance**                                            
+↓                      
+The ETL Procedure now starts.                                            
+It'll read data from the telemetry CSV file --> standardising the format, making it suitable for streaming                                  
+↓                      
+We've then set up ExecutorService to manage multiple threads. Increased concurrency has a direct correlation with increased throughput                                      
+↓                      
+I've discussed this below in much detail. We've utilised CompletableFuture for making my data ingestion process fully asynchronous to the Kinesis stream                      ↓                      
+For data integrity/ reliability of the submissions, we'll check the responses ➡️ log successful shard IDs / capture error messages for teh failed ones                      
+↓                      
+As a non-functional enhancement, we'll have some graceful shutdown mechanisms in place, We'll ensure all our tasks are completed by shutting down the Executor Service and Kinesis Producer properly ▶️ Cost optimisation by freeing up resources we don't need + Preventing inadvertent data loss                      
+↓                      
+Will continue to monitor metrics and then optimize on / fine-tune the paramaters/ configurations we've set to balance cost, performance plus reliability.                      
 
 </br>
 
@@ -178,18 +179,22 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 ### Considerations before processing in lambda
 
-1 --> **We had to weigh in the impact on downstream systems**. This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. (We don't want POFs)                      
+1 --> **We had to weigh in the impact on downstream systems**.                                  
+This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. (We don't want POFs)                      
 
-2 --> **Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.**          
+2 --> **Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.** 🚩         
 
 3--> This also means **we're bumping up our memory allocation, and compute costs.** For complex data transformations, and heavy data analytics, **we've got other alternatives that work out better given the use case and viability**                                            
 
+</br>
 
-So, we went on with light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently)
+So, we went on with light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
 
-➡️ Some initial data cleansing :- It'll quickly remove any corrupt/irrelevant data points, that do not require any complex logic to be identified
-➡️ Will also help us with some simple data transformations. Converting data formats for consistency --> such as all timestamps in ISO Format
-➡️
+Some **initial data cleansing** - **It'll quickly remove any corrupt/irrelevant data points, that do not require any complex logic to be identified**. Also, for simple data transformations. Timestamp conversions to ISO Format                      
+Ligtweight Enrichments to the data: Inserting some necessary metadata, We'll add source tags for a much better data segemntation downstream.
+
+> Our intent here was to keep the data processing and transformation logic very light-weight. This would actually align with lambda's stateless model. All of these transformations do not require the state to persist 
+
 
 
 </br>
