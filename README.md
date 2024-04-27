@@ -31,10 +31,10 @@ Our point of emphasis:-
 
 ### How does the Kinesis producer workflow look like? The setup of the ingestion part of the pipeline
 
-**We'll first quickly initialize the producer's configuration**                                            
-**Need to have some crucial parameters like timeouts, maxconnections** in place, This will help optimize on kinesis' performance                                            
+We'll first quickly initialize the producer's configuration                                            
+Need to have some crucial parameters like timeouts, maxconnections in place, This will help optimize on kinesis' performance                                            
 ↓                      
-**With all the necessary configurations specified, we'll instantiate the producer instance**                                            
+With all the necessary configurations specified, we'll instantiate the producer instance.                                             
 ↓                      
 The ETL Procedure now starts.                                            
 It'll read data from the telemetry CSV file --> standardising the format, making it suitable for streaming                                  
@@ -42,9 +42,9 @@ It'll read data from the telemetry CSV file --> standardising the format, making
 We've then set up ExecutorService to manage multiple threads. Increased concurrency has a direct correlation with increased throughput                                      
 ↓                      
 I've discussed this below in much detail. We've utilised CompletableFuture for making my data ingestion process fully asynchronous to the Kinesis stream                      ↓                      
-For data integrity/ reliability of the submissions, we'll check the responses ➡️ log successful shard IDs / capture error messages for teh failed ones                      
+For data integrity/ reliability of the submissions, we'll check the responses ➡️ log successful shard IDs / capture error messages for the failed ones                      
 ↓                      
-As a non-functional enhancement, we'll have some graceful shutdown mechanisms in place, We'll ensure all our tasks are completed by shutting down the Executor Service and Kinesis Producer properly ▶️ Cost optimisation by freeing up resources we don't need + Preventing inadvertent data loss                      
+As a non-functional enhancement, we'll have some graceful shutdown mechanisms in place, We'll ensure all our tasks are completed by shutting down the Executor Service and Kinesis Producer properly ▶️ Cost optimisation by freeing up resources we don't need + Preventing inadvertent data loss                        
 ↓                      
 Will continue to monitor metrics and then optimize on / fine-tune the paramaters/ configurations we've set to balance cost, performance plus reliability.                      
 
@@ -64,13 +64,15 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
 
 #### **Approach I** - wherein we exclusively used ExecutorService
 
---> **Initially, we utilized _only_ `ExecutorService` to manage our thread **
-NOTE:- _This setup created a partially asynchronous workflow._
+--> **Initially, we utilized _only_ `ExecutorService` to manage our thread-**
 
-Why partially asynchronous?
-While ExecutorService enables concurrent execution, allowing multiple tasks or threads to run in parallel, it only manages the submission of these tasks asynchronously. The retrieval of results, on the other hand, involves a blocking operation.
+KEY POINT:- _This setup created a partially asynchronous workflow._
 
-> _Thus, while task submission occurs asynchronously, retrieving the results using the Future object does not._
+#### What exactly was the lacuna here?
+
+> While ExecutorService enables concurrent execution, allowing multiple tasks or threads to run in parallel, it only manages the submission of these tasks asynchronously. The retrieval of results, on the other hand, involves a blocking operation.
+
+> _Thus, while task submission occurs asynchronously, retrieving the results using the Future object by does not._
 
 </br>
 
