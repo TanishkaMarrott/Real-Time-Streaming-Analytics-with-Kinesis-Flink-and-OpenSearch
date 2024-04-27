@@ -53,32 +53,27 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
 
 ## What sort of design decisions did we make for the ingestion layer?
 
-### A &rarr; _We opted for the _On-demand capacity mode_ for KDS:-_
+### A &rarr; We opted for the _On-demand capacity mode_ for KDS:-
            
---> Our data stream _must scale automatically_ whenever there're variations in the workload.
+--> 📍 Our data stream _must scale automatically_ whenever there're variations in the workload.
 
 > **We do not need to manually handle shard capacities, it'll automatically scale based on the influx of streaming data** 👍
 
 </br>
 
-### B &rarr; Had to optimize on the thread management mechanism
+### B &rarr; We then optimized on the thread management mechanism
 
-#### **Approach I** - wherein we exclusively used ExecutorService
+#### Approach I 
 
---> **Initially, we utilized _only_ `ExecutorService` to manage our thread-**
-
-KEY POINT:- _This setup created a partially asynchronous workflow._
+When we used only ExecutorService
 
 #### What exactly was the lacuna here?
 
-> While ExecutorService enables concurrent execution, allowing multiple tasks or threads to run in parallel, it only manages the submission of these tasks asynchronously. The retrieval of results, on the other hand, involves a blocking operation.
-
-> _Thus, while task submission occurs asynchronously, retrieving the results using the Future object by does not._
-
-</br>
-
-> **Potential Red Flag** 🚩: The `Future.get()` method compels the calling thread to wait until the task completes which means we'e blocking the thread.
-> NOT RECOMMENDED. 
+ So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.       
+ 
+ KEY POINT:- _This setup created a partially asynchronous workflow._
+ 
+ ****Potential Red Flag** 🚩:- It only manages the submission of these tasks asynchronously. The retrieval of results --> that's when we use future.get(), IS a blocking operation.** 
 
 </br>
 
@@ -86,7 +81,7 @@ KEY POINT:- _This setup created a partially asynchronous workflow._
 
 We had to quickly transform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
 
-**--> _Integrated `CompletableFuture` + `ExecutorService`_**
+**_Differentiator_--> Integrated `CompletableFuture` + `ExecutorService`**
             
 KEY POINTS TO NOTE:- 
 
@@ -98,7 +93,7 @@ _Point 2:-_ **Now, that we've combined `CompletableFuture`, means we're NOT bloc
 
 > **What did we achieve ?**
 >     
-> **My entire workflow is now fully asynchronous. ↪️ Operational efficient because we've now improved throughput** 👍
+> **My entire workflow is now fully asynchronous. ↪️ Operational efficient because we've now improved throughput** 👍 👍
 
 </br>
 
@@ -158,7 +153,7 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 More so, it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.
 
-**What did we achieve ? Strong availability + reliability** ✅
+**What did we achieve ? Strong availability + reliability** ✅ 👍
 
 </br>
 
@@ -173,7 +168,6 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 ➡️ **Athena can then use this schema information for quering data in s3**. 
 
 > Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities** 
-
 > I've shared the Table Definition above, firehose references this definition in glue
 
 </br>
@@ -193,8 +187,8 @@ This means the processing logic on Lambda shouldn't be too heavy, such that it s
 
 So, we went on with light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
 
-Some **initial data cleansing** - **It'll quickly remove any corrupt/irrelevant data points, that do not require any complex logic to be identified**. Also, for simple data transformations. Timestamp conversions to ISO Format                      
-Ligtweight Enrichments to the data: Inserting some necessary metadata, We'll add source tags for a much better data segemntation downstream.
+</br>
+
 
 > Our intent here was to keep the data processing and transformation logic very light-weight. This would actually align with lambda's stateless model. All of these transformations do not require the state to persist 
 
