@@ -35,8 +35,7 @@ We'll first quickly initialize the producer's configuration
 Need to have some crucial parameters like timeouts, maxconnections in place, This will help optimize on kinesis' performance                                            
 ↓                      
 With all the necessary configurations specified, we'll instantiate the producer instance.                                             
-↓                      
-The ETL Procedure now starts.                                            
+↓                                                               
 It'll read data from the telemetry CSV file --> standardising the format, making it suitable for streaming                                  
 ↓                      
 We've then set up ExecutorService to manage multiple threads. Increased concurrency has a direct correlation with increased throughput                                      
@@ -57,6 +56,8 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
            
 --> 📍 Our data stream _must scale automatically_ whenever there're variations in the workload.
 
+</br>
+
 > **We do not need to manually handle shard capacities, it'll automatically scale based on the influx of streaming data** 👍
 
 </br>
@@ -69,60 +70,62 @@ When we used only ExecutorService
 
 #### What exactly was the lacuna here?
 
- So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.       
+ So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.  
  
- KEY POINT:- _This setup created a partially asynchronous workflow._
  
- ****Potential Red Flag** 🚩:- It only manages the submission of these tasks asynchronously. The retrieval of results --> that's when we use future.get(), IS a blocking operation.** 
+ 
+> **Red Flag** 🚩:-
+>
+>  It only manages the submission of these tasks asynchronously.
+>
+> The retrieval of results --> that's when we use future.get(), forces the calling thread to wait --> It's a BLOCKING operation
+>
+> => A partially asynchronous workflow 
 
 </br>
 
 ### How did we overcome this challenge then?
 
-We had to quickly transform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
+We had to quickly transform our approach.            
+📌 **We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis** 
 
-**_Differentiator_--> Integrated `CompletableFuture` + `ExecutorService`**
-            
-KEY POINTS TO NOTE:- 
+**_Differentiator_** = Integrated `CompletableFuture` with `ExecutorService`
 
-_Point 1 :-_ `ExecutorService` will only be responsible for managing the thread pool --> This only takes care of the concurrency aspect                  
+_Step 1:-_ `ExecutorService` will only be responsible for managing the thread pool            
+--> This only takes care of the concurrency aspect      
 
-_Point 2:-_ **Now, that we've combined `CompletableFuture`, means we're NOT blocking any thread, it can perform other operations without waiting for task completion** 💡
-
-</br>
-
-> **What did we achieve ?**
->     
-> **My entire workflow is now fully asynchronous. ↪️ Operational efficient because we've now improved throughput** 👍 👍
+_Step 2:-_  The `CompletableFuture` object we've used will now have some non-blocking methods like thenApply() and thenCombine().
+thenApply() --> will be used to transform the result when it gets available
+thenCombine() --> 
 
 </br>
 
-### C &rarr; Dynamically sized thread pool 
+> I can now chain tasks, and manage them sequentially. My entire workflow is now fully asynchronous. =  ↪️ Operational efficient because we've now improved throughput 👍 👍
+
+</br>
+
+### C &rarr; A dynamically sized thread pool 
+
+</br>
+
+> #### Why did we go with such a heuristic? (2 * the number of CPU Cores) for the thread pool? Why was it not a static thread pool?
+
+</br>
 
 A couple of reasons here:-
 
---> **Ours is more of a hybrid workload. ➡️ It's a mix of CPU-Bound and I/O bound threads.** 
+**Ours is more of a hybrid workload. ➡️ It's a mix of CPU-Bound and I/O bound threads.** 
 (It involves both computations as well as sending data to Kinesis)
-
 In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
 
-> #### Why did we go with such a heuristic? (2 * the number of CPU Cores)
->
-> _Simple Answer:-_
-> **A balanced resource utilisation** 💡
+1 &rarr; **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
+Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
 
-</br>
-
-1 -->  **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
-Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations.
-
-2 --> We're cognizant of the resources we're using --> **There should neither be underutilisation or over-allocation.** ✔️ 🏁
+2 &rarr;  We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
 
 </br>
 
 > So, **irrespective of our environments, our application can quickly adapt to machines, making our application responsive and scalable from the get-go**
->
-> This is **one of my strategy I often use whenever we're trying to optimize the software architecture itself to make it way more resource efficient plus scalable 👍.**
 
 </br>
 
@@ -132,14 +135,14 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 </br>
 
-### D --> We've implemented a retry + progressive backoff mechanism 
+### D --> We've implemented a Retry + Progressive backoff mechanism 
 
 
-1 --> We were adamant on implementing some sort of error handling mechanisms:-
+1 &rarr; We were adamant on implementing some sort of error handling mechanisms:-
+
+ _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
 >
-> _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
->
-  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
+  ➡️ **That'll help us maintain a good level of Operational stability + Service continuity 👍**
 >
 > </br>
 >
@@ -151,12 +154,11 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 >     C - We end up improvising the data consistency and processing, handling errors GRACEFULLY ➡️ We're giving errors more time to resolve, by increasing the time interval between two subsequent retries
 
 
-More so, it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.
+More so, **it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.**
 
-**What did we achieve ? Strong availability + reliability** ✅ 👍
+### = Strong Availability + Reliability ✅ 👍
 
 </br>
-
 
 ## Data transformation layer for this architecture
 
@@ -167,6 +169,8 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 **We've used glue as a central metadata repository** through data catalog.               
 ➡️ **Athena can then use this schema information for quering data in s3**. 
 
+</br>
+
 > Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities** 
 > I've shared the Table Definition above, firehose references this definition in glue
 
@@ -176,25 +180,38 @@ Services we've utilised :- **Kinesis Data Firehose + Glue**
 
 ### Considerations before processing in lambda
 
-1 --> **We had to weigh in the impact on downstream systems**.                                  
-This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. (We don't want POFs)                      
+1 => **We had to weigh in the impact on downstream systems**.                                  
+This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. - We don't want bottlenecks.                     
+2 => **Plus if our volume of data and frequency of data processing requests is too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.** 🚩         
 
-2 --> **Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.** 🚩         
-
-3--> This also means **we're bumping up our memory allocation, and compute costs.** For complex data transformations, and heavy data analytics, **we've got other alternatives that work out better given the use case and viability**                                            
-
-</br>
-
-So, we went on with light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
+3 => This also means **we're bumping up our memory allocation and compute costs.** For complex data transformations, and heavy data analytics, **we've got other alternatives that work out better given the use case and viability**                                            
 
 </br>
 
-
-> Our intent here was to keep the data processing and transformation logic very light-weight. This would actually align with lambda's stateless model. All of these transformations do not require the state to persist 
-
-
+**Solution 💡:-**                
+So, we decided to have light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
 
 </br>
+
+> **Our intent here was to keep the data processing and transformation logic very light-weight.** This would actually align with lambda's stateless model. All of these transformations do not require the state to be retained across operations. None of these demand a stateful context.
+
+</br>
+
+_Pls check out the CF template for details around this data transformation lambda_
+
+--
+
+#### Quickly recapitulating what this lambda would do:-
+
+Lambda is first triggered with a batch of records coming in from KDS -->                 
+Then, it'll deserialise the data -->                 
+We're then performing some initial data validation / cleansing (Validation checks to remove corrupt/irrelevant data points,) -->                    
+Timestamp standardisation to ISO Format -->                    
+Plus, some lightweight data enrichment, Adding metadata 'source' to for traceability downstream -->     
+logging record's submission, capturing the record ID + metrics/errors -->       
+Will then assemble the records to be sent to firehose
+
+
 
 ## Design decisions we've made in the transformation layer
 
@@ -270,7 +287,7 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-## How does the workflow actually look like?
+## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
  **We've defined a Kinesis Connector for Flink** to read from the Stream            
    &nbsp;    **↓**            
