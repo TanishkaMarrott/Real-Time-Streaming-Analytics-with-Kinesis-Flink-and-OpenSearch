@@ -86,17 +86,21 @@ When we used only ExecutorService
 
 ### How did we overcome this challenge then?
 
-We had to quickly transform our approach.            
-📌 **We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis** 
+We had to quickly transform our approach.      
 
-**_Differentiator_** = Integrated `CompletableFuture` with `ExecutorService`
 
-_Step 1:-_ `ExecutorService` will only be responsible for managing the thread pool            
---> This only takes care of the concurrency aspect      
+******📌 **We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis** ******
 
-_Step 2:-_  The `CompletableFuture` object we've used will now have some non-blocking methods like thenApply() and thenCombine().
-thenApply() --> will be used to transform the result when it gets available
-thenCombine() --> 
+**_Differentiator_** => Integrated `CompletableFuture` with `ExecutorService`
+
+How exactly?
+
+🧩`ExecutorService` will only be responsible for managing the thread pool            
+--> This ONLY takes care of the concurrency aspect      
+
+ 🧩 The `CompletableFuture` object we've used will now have some non-blocking methods like thenApply() and thenCombine().                    
+`thenApply()` --> will be used to transform the result when it gets available
+`thenCombine()` --> 
 
 </br>
 
