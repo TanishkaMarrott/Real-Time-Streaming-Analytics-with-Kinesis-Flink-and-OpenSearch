@@ -75,8 +75,6 @@ When we used only ExecutorService
  If we look at the methods that're provided by ExecutorService ex. submit() & invokeAll() deal with Future objects 
 (Using Future.get() makes the submitting thread to wait/block, until we're through with our computation.)
  
- 
- 
 > **Red Flag** 🚩:-
 >
 >  It only manages the submission of these tasks asynchronously.
@@ -91,21 +89,22 @@ When we used only ExecutorService
 
 We had to quickly transform our approach.      
 
+📌 **We anyhow wanted to get a fully asynchronuos workflow for sending data to Kinesis**. 
 
-******📌 **We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis** ******
+> We could not compromise on the efficiency / responsiveness of the application, as it was crucial for maintaining high levels of throughput we were looking at.
+
+</br>
 
 **_Differentiator_** => Integrated `CompletableFuture` with `ExecutorService`
 
-How exactly?
+</br>   
 
-`ExecutorService` 👇
- Will only be responsible for managing the thread pool       
+> Okay, so what I mean here, is that CombineFuture extends our concept of Future here, CombineFuture does support dependent operations --> like the actions that trigger upon future's completion.  But without blocking the thread (example, thenApply())
 
-****--> This ONLY takes care of the concurrency aspect****     
+</br>   
 
- `CompletableFuture` object we've used **will now have some non-blocking methods like thenApply() and thenCombine()**.                          
-`thenApply()` --> will be used to transform the result when it gets available without blcoking the calling thread.                
-`thenCombine()` --> will enable us to combine results of asynchronous operations, without having to keep the thread idle / blocked, while waiting for the result's retrieval.
+We'll use `thenApply()` here --> It'll enable us to transform the result without blocking the main thread.                   
+
 
 </br>
 
@@ -115,7 +114,6 @@ How exactly?
 
 ### C &rarr; A dynamically sized thread pool 
 
-</br>
 
 > #### Why did we go with such a heuristic? (2 * the number of CPU Cores) for the thread pool? Why was it not a static thread pool?
 
