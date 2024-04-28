@@ -71,6 +71,9 @@ When we used only ExecutorService
 #### What exactly was the lacuna here?
 
  So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.  
+
+ If we look at the methods that're provided by ExecutorService ex. submit() & invokeAll() deal with Future objects 
+(Using Future.get() makes the submitting thread to wait/block, until we're through with our computation.)
  
  
  
@@ -95,12 +98,14 @@ We had to quickly transform our approach.
 
 How exactly?
 
-🧩`ExecutorService` will only be responsible for managing the thread pool            
---> This ONLY takes care of the concurrency aspect      
+`ExecutorService` 👇
+ Will only be responsible for managing the thread pool       
 
- 🧩 The `CompletableFuture` object we've used will now have some non-blocking methods like thenApply() and thenCombine().                    
-`thenApply()` --> will be used to transform the result when it gets available
-`thenCombine()` --> 
+****--> This ONLY takes care of the concurrency aspect****     
+
+ `CompletableFuture` object we've used **will now have some non-blocking methods like thenApply() and thenCombine()**.                          
+`thenApply()` --> will be used to transform the result when it gets available without blcoking the calling thread.                
+`thenCombine()` --> will enable us to combine results of asynchronous operations, without having to keep the thread idle / blocked, while waiting for the result's retrieval.
 
 </br>
 
