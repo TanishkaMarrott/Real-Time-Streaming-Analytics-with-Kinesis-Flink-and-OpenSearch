@@ -103,7 +103,7 @@ We had to quickly transform our approach.
 
 </br>   
 
-We'll use `thenApply()` here --> It'll enable us to transform the result without blocking the main thread.                   
+I'll use `thenApply()` here --> It'll enable us to transform the result without blocking the main thread.                   
 
 
 </br>
@@ -114,18 +114,19 @@ We'll use `thenApply()` here --> It'll enable us to transform the result without
 
 ### C &rarr; A dynamically sized thread pool 
 
+</br>
 
-> #### Why did we go with such a heuristic? (2 * the number of CPU Cores) for the thread pool? Why was it not a static thread pool?
+> _Why did we go with such a heuristic? Why was the factor --> 2 * Number of CPU cores? Why was it not a static thread pool?_  I'll answer these questions now
 
 </br>
 
 A couple of reasons here:-
 
-**Ours is more of a hybrid workload. ➡️ It's a mix of CPU-Bound and I/O bound threads.** 
-(It involves both computations as well as sending data to Kinesis)
-In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
+Reason 1 🔀 **Ours is a hybrid workload. It's a mix of CPU-bound & I/O-bound threads** 
+(Check the code, it involves both computations plus sending data to Kinesis)
 
-1 &rarr; **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
+In such a scenario, **I'll advise to go with a factor of 2 = 2 * the number of available cores**
+**We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
 Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
 
 2 &rarr;  We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
@@ -144,10 +145,9 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 
 ### D --> We've implemented a Retry + Progressive backoff mechanism 
 
-
 1 &rarr; We were adamant on implementing some sort of error handling mechanisms:-
 
- _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
+> _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
 >
   ➡️ **That'll help us maintain a good level of Operational stability + Service continuity 👍**
 >
@@ -171,21 +171,26 @@ More so, **it's a predictable system behaviour, We have a well-defined retry pol
 
 Services we've utilised :- **Kinesis Data Firehose + Glue**
 
-### What was our rationale behind using firehose plus glue?
+</br>
+
+### What was our rationale behind using Firehose plus Glue?
                       
-**We've used glue as a central metadata repository** through data catalog.               
-➡️ **Athena can then use this schema information for quering data in s3**. 
+**--> We've used glue as a central metadata repository** through data catalog. 
+➡️ Athena can then use this schema information for quering data in s3 
 
 </br>
 
-> Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities** 
-> I've shared the Table Definition above, firehose references this definition in glue
+> Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities**
+
+ </br>
+ 
+ _I've shared the Table Definition above, firehose references this definition in glue_
 
 </br>
 
 ## Data Transformations using lambda
 
-### Considerations before processing in lambda
+### Considerations before processing our data using lambda
 
 1 => **We had to weigh in the impact on downstream systems**.                                  
 This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. - We don't want bottlenecks.                     
@@ -195,7 +200,8 @@ This means the processing logic on Lambda shouldn't be too heavy, such that it s
 
 </br>
 
-**Solution 💡:-**                
+**Solution 💡:-**     
+
 So, we decided to have light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
 
 </br>
@@ -218,7 +224,7 @@ Plus, some lightweight data enrichment, Adding metadata 'source' to for traceabi
 logging record's submission, capturing the record ID + metrics/errors -->       
 Will then assemble the records to be sent to firehose
 
-
+</br>
 
 ## Design decisions we've made in the transformation layer
 
