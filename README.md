@@ -116,7 +116,7 @@ I'll use `thenApply()` here --> It'll enable us to transform the result without 
 
 </br>
 
-> _Why did we go with such a heuristic? Why was the factor --> 2 * Number of CPU cores? Why was it not a static thread pool?_  I'll answer these questions now
+> _Why did we go with such a heuristic? Why was the factor --> 2 * Number of CPU cores? Why was it not a static thread pool?_  I'll answer these questions here
 
 </br>
 
@@ -125,21 +125,23 @@ A couple of reasons here:-
 Reason 1 🔀 **Ours is a hybrid workload. It's a mix of CPU-bound & I/O-bound threads** 
 (Check the code, it involves both computations plus sending data to Kinesis)
 
-In such a scenario, **I'll advise to go with a factor of 2 = 2 * the number of available cores**
-**We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
-Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
+In such a scenario, **I'll advise to go with a factor of 2**
 
-2 &rarr;  We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
+***( 2 * the number of available cores)***         
 
-</br>
-
-> So, **irrespective of our environments, our application can quickly adapt to machines, making our application responsive and scalable from the get-go**
+**We're actively engaging all the cores, without overwhelming the system.**         So, **each CPU would now have two threads to work on:- the CPU-bound, and the I/O Bound ones.** Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
 
 </br>
 
-3 --> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough
+Reason 2 🔀 **Irrespective of the environment we've deployed the application on, our application can quickly adapt to a variety of machines/ VMs, making our application responsive and scalable from the get-go**
 
-➡️ Resource efficient + Performance optimised 👍
+</br>
+
+Reason 3 🔀 **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough. We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
+
+</br>
+
+### ➡️ Resource efficient + Performance optimised 👍
 
 </br>
 
