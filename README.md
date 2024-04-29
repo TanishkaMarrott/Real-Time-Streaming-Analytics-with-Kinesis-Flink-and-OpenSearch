@@ -183,7 +183,7 @@ More so, **it's a predictable system behaviour, We have a well-defined retry pol
 
 </br>
 
-## Data transformation layer for this architecture
+## Data transformation layer for Workflow #1:-
 
 Services we've utilised :- **Kinesis Data Firehose + Glue**
 
@@ -292,9 +292,7 @@ The **key service we've used here is Kinesis Data Analytics (KDA)**
 
 ⚙️ This is **Workflow #2**     
 
-As we've mentioned, data is ingested through KDS in the form of JSON Blobs. 
-
-We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**. 
+As we've mentioned, Streaming data is ingested through Kinesis Data Streams, This ingested data would then be processed by a Flink SQL Application deployed on KDA Studio --- that's Kinesis Data Analytics. Post processing, we've sent our processed data to OpenSearch, for visualisation and analytics of historic data.
 
 </br>
 
@@ -305,16 +303,32 @@ We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**.
 
 </br>
 
+
+**As I've mentioned above, all the complex data processing / heavy data transformations have been offloaded to Flink, It's best for running such kind of stateful computations (They require the state to be retained across operations, hence stateful) on the data as its being streamed in.**
+
+So, our complex trans
+
+</br>
+
 ### Why did we incorporate OpenSearch alongside Flink?
 
 Flink is awesome for _real-time data processing_
 
 > ➡️ **This means it'll help us in performing some complex computations, _as data flows through the system_**
 
-However, once we're done with processing, **OpenSearch will be our search and analytics engine                                                 
---> It helps us in _actually extracting useful insights from the processed data + some data visualisation capabilities_** 👍
+However, once we're done with processing, **OpenSearch will be our search and analytics engine FOR HISTORIC DATA                                                 
+--> It helps us in _ACTUALLY EXTRACTING USEFUL INSIGHTS from the processed data + some data visualisation capabilities_** 👍
 
 </br>
+
+## Design Considerations from a non-functional standpoint to optimize the second worflow:-
+
+I'll go component-wise, starting from KDA
+
+
+
+
+
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
