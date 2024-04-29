@@ -64,9 +64,9 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
 
 ### B &rarr; We then optimized on the thread management mechanism
 
-#### Approach I 
+#### Approach I - When I used _solely_ ExecutorService
 
-When we used only ExecutorService
+
 
 #### What exactly was the lacuna here?
 
@@ -74,11 +74,12 @@ When we used only ExecutorService
 
  If we look at the methods that're provided by ExecutorService ex. submit() & invokeAll() deal with Future objects 
 (Using Future.get() makes the submitting thread to wait/block, until we're through with our computation.)
+
+ </br>
  
 > **Red Flag** 🚩:-
 >
 >  It only manages the submission of these tasks asynchronously.
->
 > The retrieval of results --> that's when we use future.get(), forces the calling thread to wait --> It's a BLOCKING operation
 >
 > => A partially asynchronous workflow 
@@ -91,6 +92,8 @@ We had to quickly transform our approach.
 
 📌 **We anyhow wanted to get a fully asynchronuos workflow for sending data to Kinesis**. 
 
+ </br>
+ 
 > We could not compromise on the efficiency / responsiveness of the application, as it was crucial for maintaining high levels of throughput we were looking at.
 
 </br>
@@ -104,7 +107,6 @@ We had to quickly transform our approach.
 </br>   
 
 I'll use `thenApply()` here --> It'll enable us to transform the result without blocking the main thread.                   
-
 
 </br>
 
