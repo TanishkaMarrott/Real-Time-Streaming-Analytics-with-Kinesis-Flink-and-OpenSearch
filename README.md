@@ -122,36 +122,47 @@ I'll use `thenApply()` here --> It'll enable us to transform the result without 
 
 A couple of reasons here:-
 
-Reason 1 🔀 **Ours is a hybrid workload. It's a mix of CPU-bound & I/O-bound threads** 
-(Check the code, it involves both computations plus sending data to Kinesis)
+Reason 1 🔀 **Ours is a hybrid workload. It's a mix of CPU-bound & I/O-bound threads**                 
+(Check out the code -- it involves both computations plus sending data to Kinesis)
 
-In such a scenario, **I'll advise to go with a factor of 2**
+***In such a scenario, **I'll advise to go with a factor of 2***
 
-***( 2 * the number of available cores)***         
+            ***( 2 * the number of available cores)***         
 
-**We're actively engaging all the cores, without overwhelming the system.**         So, **each CPU would now have two threads to work on:- the CPU-bound, and the I/O Bound ones.** Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
-
-</br>
-
-Reason 2 🔀 **Irrespective of the environment we've deployed the application on, our application can quickly adapt to a variety of machines/ VMs, making our application responsive and scalable from the get-go**
+**--> We're actively engaging all the cores, without overwhelming the system.**              
+So, **each CPU would now have two threads to work on:- the CPU-bound, and the I/O Bound ones.** Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
 
 </br>
 
-Reason 3 🔀 **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough. We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
+Reason 2 🔀 Irrespective of the environment we've deployed the application on, **our application can quickly adapt to a variety of machines/ VMs**, making our application responsive and scalable from the get-go
 
 </br>
 
-### ➡️ Resource efficient + Performance optimised 👍
+Reason 3 🔀 **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough. 
+
+We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
+
+
+ #### = Resource efficiency + Performance Optimisation 👍✅
 
 </br>
 
-### D --> We've implemented a Retry + Progressive backoff mechanism 
+--
+
+### D &rarr; We've implemented a _Retry + Progressive backoff mechanism_ 
 
 1 &rarr; We were adamant on implementing some sort of error handling mechanisms:-
 
+</br>
+
 > _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
->
+
+</br>
+
   ➡️ **That'll help us maintain a good level of Operational stability + Service continuity 👍**
+
+</br>
+
 >
 > </br>
 >
@@ -162,10 +173,11 @@ Reason 3 🔀 **We had to save on the infra-costs as well**, We're working on th
 >     B - We're making our application stable --> We'll limit the number of retries allowed, so, even in face of errors, our application would operate reliably (we do not want it to enter into a loop of infinite failures) 
 >     C - We end up improvising the data consistency and processing, handling errors GRACEFULLY ➡️ We're giving errors more time to resolve, by increasing the time interval between two subsequent retries
 
+</br>
 
 More so, **it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.**
 
-### = Strong Availability + Reliability ✅ 👍
+#### = Strong Availability + Reliability ✅ 👍
 
 </br>
 
