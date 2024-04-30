@@ -268,35 +268,26 @@ But would be more cost-effective; we're cutting down on the transmission costs�
 
 ### **What exactly was my rationale behind this?**
 
-🔆 **When we allow data to accumulate in batches before delivery, we're reducing the number of PUT requests to S3** 
-
-</br>
+🔆 **--> We're reducing the number of PUT requests to S3, cause our data is now accumulating in batches** 
 
 This means --> 
                 **Buffer Size ∝ Latency in delivery  ∝ 1 / costs we'll incur**
 
 </br>
 
-🔆 **We're also reducing on my "per-operation overhead".** (There'll always be some operational overhead, like disk writes, network calls while data transmission...)
-
-</br>
+🔆 **--> We're also reducing on our <ins>"per-operation overhead".</ins>** (There'll always be some operational overhead, like disk writes, network calls while data transmission...)
 
 >  When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍 
 
 </br>
 
-🔆 Network bandwidth. (We're not wasting unnecessary CPU time on handling I/O operations). Also, we;re cognizant of the API Limits 👍
-
- </br>
+🔆 --> We wanted to ensure we're going conservative on CPU time on handling I/O operations. Also, we're cognizant of the API Limits 👍
             
-> I might also crank up the buffer interval to 900 second for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
+> I might also crank up the buffer interval to 900 seconds for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
 
  </br>
  
- #### Why did we convert the format from JSON to Parquet? 
- 
- A couple of reasons here:-
- 
+### We had to utilise Data Compression and modify 
  **--> It helps us reduce storage costs significantly**.  
  
  **--> We were looking for an efficient kind of query mechanism for Athena**. And **Parquet's columnar structure** works very well.
