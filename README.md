@@ -242,12 +242,54 @@ Will then assemble the records to be sent to firehose
 
 </br>
 
-## Design decisions we've made in the transformation layer
 
-### _A -->**Converting the source record format:-**_
+## Non-functional design decisions for the transformation layer
 
- We've used **Kinesis Data Firehose** for  data delivery into S3 & some initial data transformation.
+</br>
 
+> I'll go component wise here, as to how we'd optimize on the non-functional aspects of this layer
+
+</br>
+
+### Kinesis data Firehose - Enhancements from a design standpoint
+
+### --> We'd optimize on the configurations of buffer size and buffer interval
+
+This is quite use-case specific, However, diving deep for better clarity
+
+If we're concerned about latency, we'd rather go in with smaller Buffer Sizes, smaller interval times,  lower latency but at higher costs (the data transmission costs)
+
+On the other hand, if we opt for a larger buffer size, it'll slightly delay our delivery rates into S3                
+But can be more cost-effective 👍
+
+</br>
+
+**What exactly was the rationale behind this?**
+
+🔆 We had to cut down on unnecessary costs, **When we allow data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3**, (This helps us reduce on the costs)
+
+🔆 **We're also reducing on my "per-operation overhead".** How? Each time we make a data transmission, there's a overhead associatedwith netwrok calls, disk writes etc. 
+
+</br>
+
+> When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍
+
+</br>
+
+🔆 I'm not wasting 
+
+
+
+
+This means --> 
+            **Buffer Size ∝ Latency in delivery  ∝ 1 / costs we'll incur**
+
+            </br>
+            
+> I might also crank up the buffer interval to 900 second for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
+
+ </br>
+ 
  #### Why did we convert the format from JSON to Parquet? 
  
  A couple of reasons here:-
@@ -258,19 +300,9 @@ Will then assemble the records to be sent to firehose
 
 </br>
   
-### _B --> Optimising the buffer size & interval:-_
 
-**We had to maximize the buffer interval time for data delivery into S3.**
 
-</br>
 
-**_Rationale behind this:-_**  
-By allowing Data to accumulate in large batches before delivery, we're **_reducing the number of PUT requests to S3_**, thereby reducing transaction costs. This also results in **_improvising the throughput_** through batching and subsequent storage. Something around **_300-600 seconds_** would be a good number to start with.
-
-Buffer Size has been maximised, Costs would be lowered, but **_at the cost of a higher latency_**. 
-
-Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a relative choice.  
-***Point to Note:-- We need to strike balance between the **timely availability of data versus the operational costs** incurred.****
 
 </br>
 
