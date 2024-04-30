@@ -255,36 +255,39 @@ Will then assemble the records to be sent to firehose
 
 ### --> We'd optimize on the configurations of buffer size and buffer interval
 
-This is quite use-case specific, However, diving deep for better clarity
+</br>
 
-If we're concerned about latency, we'd rather go in with smaller Buffer Sizes, smaller interval times,  lower latency but at higher costs (the data transmission costs)
-
-On the other hand, if we opt for a larger buffer size, it'll slightly delay our delivery rates into S3                
-But can be more cost-effective 👍
+> This is quite use-case specific. And involves a latency - throughput tradeoff. However, will be diving deep for better clarity
 
 </br>
 
-**What exactly was the rationale behind this?**
-
-🔆 We had to cut down on unnecessary costs, **When we allow data to accumulate in large batches before delivery, we're reducing the number of PUT requests to S3**, (This helps us reduce on the costs)
-
-🔆 **We're also reducing on my "per-operation overhead".** How? Each time we make a data transmission, there's a overhead associatedwith netwrok calls, disk writes etc. 
+If we opt for a larger buffer size, it'll delay our delivery rates into S3 (; slightly)            
+But would be more cost-effective; we're cutting down on the transmission costs👍
 
 </br>
 
-> When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍
+### **What exactly was my rationale behind this?**
+
+🔆 **When we allow data to accumulate in batches before delivery, we're reducing the number of PUT requests to S3** 
 
 </br>
-
-🔆 I'm not wasting 
-
-
-
 
 This means --> 
-            **Buffer Size ∝ Latency in delivery  ∝ 1 / costs we'll incur**
+                **Buffer Size ∝ Latency in delivery  ∝ 1 / costs we'll incur**
 
-            </br>
+</br>
+
+🔆 **We're also reducing on my "per-operation overhead".** (There'll always be some operational overhead, like disk writes, network calls while data transmission...)
+
+</br>
+
+>  When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍 
+
+</br>
+
+🔆 Network bandwidth. (We're not wasting unnecessary CPU time on handling I/O operations). Also, we;re cognizant of the API Limits 👍
+
+ </br>
             
 > I might also crank up the buffer interval to 900 second for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
 
