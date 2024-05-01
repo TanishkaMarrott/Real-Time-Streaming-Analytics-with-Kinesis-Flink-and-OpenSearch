@@ -287,10 +287,24 @@ This means -->
 
  </br>
  
-### We had to utilise Data Compression and modify 
- **--> It helps us reduce storage costs significantly**.  
+### We had to utilise Data Compression and modify the data formats
+
+Whenever we're dealing with Streaming data solutions,  **core objective that'll guide our decisions, will be reducing the amount of data transmitted over the network.**
+
+> Why?            
+> ➜ charges would typically be based on data transfer rates plus data storage rates.            
+> ➜ lower the size of data transmitted --> higher transfer speed --> reduced costs                
+
+ Hence, used Snappy for compressing the data.            
  
- **--> We were looking for an efficient kind of query mechanism for Athena**. And **Parquet's columnar structure** works very well.
+
+Second, we had to modify the data formats we've used. Shifted to a columnar Parquet format.
+
+> I had three things in mind while making this decision :-
+> 
+> 1 --> We had to optimise on the query performance.  So, when we've got a columnar orientation, it'll help for selectively reading subsets of columns, That are actually needed for the query . This means less data needs to be read from disk, --> Faster Query performance. Awesome!                    
+> 2 --> Once I reduce the amount of volume scanned during queries, I reduce the costs associated with data analytics 👍                
+> 3 - We'll subsequently have lower storage costs as well, Plus point for cost savings 
 
 </br>
   
