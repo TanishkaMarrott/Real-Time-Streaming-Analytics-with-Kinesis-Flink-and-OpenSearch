@@ -253,7 +253,7 @@ Will then assemble the records to be sent to firehose
 
 ### Kinesis data Firehose - Enhancements from a design standpoint
 
-### --> We'd optimize on the configurations of buffer size and buffer interval
+### --> 1-  We'd optimize on the configurations of buffer size and buffer interval
 
 </br>
 
@@ -287,7 +287,7 @@ This means -->
 
  </br>
  
-### We had to utilise Data Compression and modify the data formats
+### 2 - We had to utilise Data Compression and modify the data formats
 
 Whenever we're dealing with Streaming data solutions,  **core objective that'll guide our decisions, will be reducing the amount of data transmitted over the network.**
 
@@ -307,20 +307,54 @@ Second, we had to modify the data formats we've used. Shifted to a columnar Parq
 > 3 - We'll subsequently have lower storage costs as well, Plus point for cost savings 
 
 </br>
-  
 
-
-
+Okay, so we're pretty good as far as the "data aspects" are concerned. Let's now move on to Error handling! 🙂
 
 </br>
 
-### _Snappy Compression  Encryption for S3 -_
+### 3 -- We've used some smart partitioning in S3 - for segregating the error outputs 
 
-&#8594; I've utilized **_Snappy compression_** for source records
+👉 So, firehose automatically configures retries, that's not something we need to take care of.
 
-> Why did we compress the records? Its equal to faster transmission plus cost savings in storage. I'm prioritising **_high speed over a higher compression ratio*_*.
- 
-&#8594; **_Encryption_** is implemented through **_AWS-owned keys_** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+However, **we'll do some partitioning via S3 prefixes such that any failed data deliveries are differentiated from the normal outputs.** 
+
+</br>
+
+> We'll use s3 prefixes, just akin to directory structures, helps me logically segment out the error outputs.
+>
+>  --> Faster troubleshooting + recovery 👍. Records that aren't delivered are segregated plus accessible.
+
+</br>
+
+## Scope for improvement -- If I were to refine this project, from a security standpoint
+
+We're already done with Encyption for S3 - using AWS-owned keys, so data at rest is now encrypted. IAM Policies have been locked down, they're resource- and action - specific. 
+
+</br>
+
+> Considerations would change when we're dealing with ingesting heavy volumes of data. We had to adapt the design to ensure _it scales up well._ 
+
+</br>
+
+
+### I'd set up Firehose to use VPC Endpoints
+
+It answers 4 "whys":-
+
+✨ When I'm using a VPC Endpoint, this means my data would never traverse the public internet, It would be within AWS private network,     
+    
+ --> A - We're not leaving the AWS Private Network, this means any data communication between firehose and VPC Endpoint for S3 won't traverse the public internet --> significant cost savings, because we're _working at scale_    
+    
+ --> B - This also means that we're preventing any sort of public exposure. So, it does enhance our solution from a security standpoint  
+    
+ --> C - It's a plus point for performance as well, We're eliminating unnecessary hops through the public internet. = Less Latency 👍
+    
+ --> D - VPC Endpoint Policies means we've got a tighter granular access control.
+
+
+
+
+
 
 </br>
 
@@ -346,7 +380,6 @@ As we've mentioned, Streaming data is ingested through Kinesis Data Streams, Thi
 
 **As I've mentioned above, all the complex data processing / heavy data transformations have been offloaded to Flink, It's best for running such kind of stateful computations (They require the state to be retained across operations, hence stateful) on the data as its being streamed in.**
 
-So, our complex trans
 
 </br>
 
@@ -360,11 +393,6 @@ However, once we're done with processing, **OpenSearch will be our search and an
 --> It helps us in _ACTUALLY EXTRACTING USEFUL INSIGHTS from the processed data + some data visualisation capabilities_** 👍
 
 </br>
-
-## Design Considerations from a non-functional standpoint to optimize the second worflow:-
-
-I'll go component-wise, starting from KDA
-
 
 
 
