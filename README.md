@@ -16,7 +16,7 @@ Our point of emphasis:-
 
 ## Project Workflow 
 
-![Real-Time Streaming Analytics with Kinesis (1)](https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/99edb176-7c2f-485d-bae0-b32629942201)
+<img src="https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/e18c449f-3511-402f-a324-8d7db755ce38" alt="Diagram for Streaming Analytics" width="75%">
 
 
 </br>
@@ -29,118 +29,142 @@ Our point of emphasis:-
 
 </br>
 
-### The Producer Workflow
+### How does the Kinesis producer workflow look like? The setup of the ingestion part of the pipeline
 
-We'll first create the Kinesis producer configuration                                     
-This is where we'll specify the parameters like timeout, maxConnections, etc.                     
-⬇️                     
-We will then initialize a Kinesis producer instance** with the said configurations.                     
-⬇️                     
-Extract the data from the telemetry CSV we've provided.                     
-Each row in the CSV will then be converted into a Trip object.                     
-⬇️                     
-We'll then set up an Executor Service.                       
-Helps us in sending data concurrently through multiple threads, improving throughput.                     
-⬇️                            
-We will then send to our stream asynchronously using CompletableFuture.                     
-⬇️                     
-Will check if our submission was successful and log shard ID or error, as may be the case.              
-We'll shut down the Executor Service and Kinesis Producer gracefully, while ensuring that all our tasks are completed without abrupt termination.              
+We'll first quickly initialize the producer's configuration                                            
+Need to have some crucial parameters like timeouts, maxconnections in place, This will help optimize on kinesis' performance                                            
+↓                      
+With all the necessary configurations specified, we'll instantiate the producer instance.                                             
+↓                                                               
+It'll read data from the telemetry CSV file --> standardising the format, making it suitable for streaming                                  
+↓                      
+We've then set up ExecutorService to manage multiple threads. Increased concurrency has a direct correlation with increased throughput                                      
+↓                      
+I've discussed this below in much detail. We've utilised CompletableFuture for making my data ingestion process fully asynchronous to the Kinesis stream.      
+    ↓                         
+For data integrity/ reliability of the submissions, we'll check the responses ➡️ log successful shard IDs / capture error messages for the failed ones                      
+↓                      
+As a non-functional enhancement, we'll have some graceful shutdown mechanisms in place, We'll ensure all our tasks are completed by shutting down the Executor Service and Kinesis Producer properly ▶️ Cost optimisation by freeing up resources we don't need + Preventing inadvertent data loss                        
+↓                      
+Will continue to monitor metrics and then optimize on / fine-tune the paramaters/ configurations we've set to balance cost, performance plus reliability.                      
 
 </br>
 
 ## What sort of design decisions did we make for the ingestion layer?
 
-### A &rarr; _We opted for the _On-demand capacity mode_ for KDS:-_
+### A &rarr; We opted for the _On-demand capacity mode_ for KDS:-
            
---> Our data stream _must scale automatically_ whenever there're variations in the workload.
+--> 📍 Our data stream _must scale automatically_ whenever there're variations in the workload.
+
+</br>
 
 > **We do not need to manually handle shard capacities, it'll automatically scale based on the influx of streaming data** 👍
 
 </br>
 
-### B &rarr; Had to optimize on the thread management mechanism
+### B &rarr; We then optimized on the thread management mechanism
 
-#### **Approach I** - wherein we exclusively used ExecutorService
+#### Approach I - When I used _solely_ ExecutorService
 
---> **Initially, we utilized _only_ `ExecutorService` to manage our thread **
-NOTE:- _This setup created a partially asynchronous workflow._
 
-Why partially asynchronous?
-While ExecutorService enables concurrent execution, allowing multiple tasks or threads to run in parallel, it only manages the submission of these tasks asynchronously. The retrieval of results, on the other hand, involves a blocking operation.
 
-> _Thus, while task submission occurs asynchronously, retrieving the results using the Future object does not._
+#### What exactly was the lacuna here?
 
-</br>
+ So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.  
 
-> **Potential Red Flag** 🚩: The `Future.get()` method compels the calling thread to wait until the task completes which means we'e blocking the thread.
-> NOT RECOMMENDED. 
+ If we look at the methods that're provided by ExecutorService ex. submit() & invokeAll() deal with Future objects 
+(Using Future.get() makes the submitting thread to wait/block, until we're through with our computation.)
+
+ </br>
+ 
+> **Red Flag** 🚩:-
+>
+>  It only manages the submission of these tasks asynchronously.
+> The retrieval of results --> that's when we use future.get(), forces the calling thread to wait --> It's a BLOCKING operation
+>
+> => A partially asynchronous workflow 
 
 </br>
 
 ### How did we overcome this challenge then?
 
-We had to quickly transform our approach. We anyhow had to get a fully asynchronuos workflow for sending data to Kinesis :
+We had to quickly transform our approach.      
 
-**--> _Integrated `CompletableFuture` + `ExecutorService`_**
-            
-KEY POINTS TO NOTE:- 
+📌 **We anyhow wanted to get a fully asynchronuos workflow for sending data to Kinesis**. 
 
-_Point 1 :-_ `ExecutorService` will only be responsible for managing the thread pool --> This only takes care of the concurrency aspect                  
-
-_Point 2:-_ **Now, that we've combined `CompletableFuture`, means we're NOT blocking any thread, it can perform other operations without waiting for task completion** 💡
+ </br>
+ 
+> We could not compromise on the efficiency / responsiveness of the application, as it was crucial for maintaining high levels of throughput we were looking at.
 
 </br>
 
-> **What did we achieve ?**
->     
-> **My entire workflow is now fully asynchronous. ↪️ Operational efficient because we've now improved throughput** 👍
+**_Differentiator_** => Integrated `CompletableFuture` with `ExecutorService`
+
+</br>   
+
+> Okay, so what I mean here, is that CombineFuture extends our concept of Future here, CombineFuture does support dependent operations --> like the actions that trigger upon future's completion.  But without blocking the thread (example, thenApply())
+
+</br>   
+
+I'll use `thenApply()` here --> It'll enable us to transform the result without blocking the main thread.                   
 
 </br>
 
-### C &rarr; Dynamically sized thread pool 
+> I can now chain tasks, and manage them sequentially. My entire workflow is now fully asynchronous. =  ↪️ Operational efficient because we've now improved throughput 👍 👍
+
+</br>
+
+### C &rarr; A dynamically sized thread pool 
+
+</br>
+
+> _Why did we go with such a heuristic? Why was the factor --> 2 * Number of CPU cores? Why was it not a static thread pool?_  I'll answer these questions here
+
+</br>
 
 A couple of reasons here:-
 
---> **Ours is more of a hybrid workload. ➡️ It's a mix of CPU-Bound and I/O bound threads.** 
-(It involves both computations as well as sending data to Kinesis)
+Reason 1 🔀 **Ours is a hybrid workload. It's a mix of CPU-bound & I/O-bound threads**                 
+(Check out the code -- it involves both computations plus sending data to Kinesis)
 
-In such a scenario, **I'll advise to go with a factor of 2 (2 * the number of available cores)**
+***In such a scenario, **I'll advise to go with a factor of 2***
 
-> #### Why did we go with such a heuristic? (2 * the number of CPU Cores)
->
-> _Simple Answer:-_
-> **A balanced resource utilisation** 💡
+            ***( 2 * the number of available cores)***         
 
-</br>
-
-1 -->  **We're actively engaging all the CPU cores, without overwhelming the system. Each CPU would have two threads to work on, the CPU-bound, and the I/O Bound .**
-Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations.
-
-2 --> We're cognizant of the resources we're using --> **There should neither be underutilisation or over-allocation.** ✔️ 🏁
+**--> We're actively engaging all the cores, without overwhelming the system.**              
+So, **each CPU would now have two threads to work on:- the CPU-bound, and the I/O Bound ones.** Once the I/O bound threads wait for the operations to complete, the cpu could then proceed with the computational operations. 👍
 
 </br>
 
-> So, **irrespective of our environments, our application can quickly adapt to machines, making our application responsive and scalable from the get-go**
->
-> This is **one of my strategy I often use whenever we're trying to optimize the software architecture itself to make it way more resource efficient plus scalable 👍.**
+Reason 2 🔀 Irrespective of the environment we've deployed the application on, **our application can quickly adapt to a variety of machines/ VMs**, making our application responsive and scalable from the get-go
 
 </br>
 
-3 --> **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough
+Reason 3 🔀 **We had to save on the infra-costs as well**, We're working on the cloud, wherein we'd be charged based on the number of running threads. **We do not want too many threads competing for CPU Time --> (We do not want too much context-switching)** Neither do we want too less threads means we aren't performant enough. 
 
-➡️ Resource efficient + Performance optimised 👍
+We're cognizant of the resources we're using --> **There should neither be under-utilisation or over-allocation.** ✔️ 🏁
+
+
+ #### = Resource efficiency + Performance Optimisation 👍✅
 
 </br>
 
-### D --> We've implemented a retry + progressive backoff mechanism 
+--
 
+### D &rarr; We've implemented a _Retry + Progressive backoff mechanism_ 
 
-1 --> We were adamant on implementing some sort of error handling mechanisms:-
->
+1 &rarr; We were adamant on implementing some sort of error handling mechanisms:-
+
+</br>
+
 > _Point 1_ --> Something that assures us that **despite of temporary setbacks or transient errors, our application will still be well-equipped to run reliably**
->
-  ➡️ **We'll maintain a good level of Operational stability + Service continuity 👍**
+
+</br>
+
+  ➡️ **That'll help us maintain a good level of Operational stability + Service continuity 👍**
+
+</br>
+
 >
 > </br>
 >
@@ -151,85 +175,212 @@ Once the I/O bound threads wait for the operations to complete, the cpu could th
 >     B - We're making our application stable --> We'll limit the number of retries allowed, so, even in face of errors, our application would operate reliably (we do not want it to enter into a loop of infinite failures) 
 >     C - We end up improvising the data consistency and processing, handling errors GRACEFULLY ➡️ We're giving errors more time to resolve, by increasing the time interval between two subsequent retries
 
+</br>
 
-More so, it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.
+More so, **it's a predictable system behaviour, We have a well-defined retry policy with exponential backoff.**
 
-**What did we achieve ? Strong availability + reliability** ✅
+#### = Strong Availability + Reliability ✅ 👍
 
 </br>
 
-
-## Data transformation layer for this architecture
+## Data transformation layer for Workflow #1:-
 
 Services we've utilised :- **Kinesis Data Firehose + Glue**
 
-### What was our rationale behind using firehose plus glue?
+</br>
+
+### What was our rationale behind using Firehose plus Glue?
                       
-**We've used glue as a central metadata repository** through data catalog.               
-➡️ **Athena can then use this schema information for quering data in s3**. 
+**--> We've used glue as a central metadata repository** through data catalog. 
+➡️ Athena can then use this schema information for quering data in s3 
 
-> Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities** 
+</br>
 
-> I've shared the Table Definition above, firehose references this definition in glue
+> Had we used firehose by itself, it would just aid in loading streaming data into S3. &rarr; **The definitions we've stored in glue _actually_ enhance Athena's querying capabilities**
+
+ </br>
+ 
+ _I've shared the Table Definition above, firehose references this definition in glue_
 
 </br>
 
 ## Data Transformations using lambda
 
-### considerations before processing in lambda
+### Considerations before processing our data using lambda
 
-1 --> We had to weigh in the impact on downstream systems plus the user experience. This means the processing logic on Lambda shouldn't be too heavy. 
-2 --> Plus if our volume of data and frequency of data processing requests are too high, lambda might start getting strained, especially if we're using a lot of lambda's memory or getting too close to the 15 minute cap on Lambda's execution.
-3--> 
+1 => **We had to weigh in the impact on downstream systems**.                                  
+This means the processing logic on Lambda shouldn't be too heavy, such that it starts affecting our solution's overall latency. - We don't want bottlenecks.                     
+2 => **Plus if our volume of data and frequency of data processing requests is too high, lambda might start getting strained**, especially if we're using a lot of lambda's memory **or getting too close to the 15 minute cap on Lambda's execution.** 🚩         
 
-
-
-&#8594; Designed to processes streaming data, focusing on data transformation and standardisation. Sets up logging for monitoring, **_converts pickupDate and dropoffDate fields to ISO 8601 format._** Having decoded the records from base-64, it **_inserts the source 'NYCTAXI' column._**
-Function has been designed to handle errors, generating responses for each processed record, and manages batch processing as well.
+3 => This also means **we're bumping up our memory allocation and compute costs.** For complex data transformations, and heavy data analytics, **we've got other alternatives that work out better given the use case and viability**                                            
 
 </br>
 
-## Design decisions we've made in the transformation layer
+**Solution 💡:-**     
 
-### _A -->**Converting the source record format:-**_
+So, we decided to have light-weight data processing and validation for lambda, offloading complex data processing logic/transformations to Flink in KDA (More on this subsequently):-
 
- We've used **Kinesis Data Firehose** for  data delivery into S3 & some initial data transformation.
+</br>
 
- #### Why did we convert the format from JSON to Parquet? 
+> **Our intent here was to keep the data processing and transformation logic very light-weight.** This would actually align with lambda's stateless model. All of these transformations do not require the state to be retained across operations. None of these demand a stateful context.
+
+</br>
+
+_Pls check out the CF template for details around this data transformation lambda_
+
+--
+
+#### Quickly recapitulating what this lambda would do:-
+
+Lambda is first triggered with a batch of records coming in from KDS -->                 
+Then, it'll deserialise the data -->                 
+We're then performing some initial data validation / cleansing (Validation checks to remove corrupt/irrelevant data points,) -->                    
+Timestamp standardisation to ISO Format -->                    
+Plus, some lightweight data enrichment, Adding metadata 'source' to for traceability downstream -->     
+logging record's submission, capturing the record ID + metrics/errors -->       
+Will then assemble the records to be sent to firehose
+
+</br>
+
+This transformed data would now be dumped into the S3 bucket, ready for querying through Athena. 
+Hence, we're throug with workflow #1
+
+> Now, let's quickly review te non-functional enhancements we've made for this workflow's transformation layer
+
+</br>
+
+## Non-functional design decisions for the transformation layer
+
+</br>
+
+> I'll go component wise here, on the design consideration I've made in this layer
+
+</br>
+
+### Kinesis data Firehose - Enhancements from a design standpoint
+
+### --> 1-  We'd optimize on the configurations of buffer size and buffer interval
+
+</br>
+
+> This is quite use-case specific. And involves a latency - throughput tradeoff. However, will be diving deep for better clarity
+
+</br>
+
+If we opt for a larger buffer size, it'll delay our delivery rates into S3 (; slightly)            
+But would be more cost-effective; we're cutting down on the transmission costs👍
+
+</br>
+
+### **What exactly was my rationale behind this?**
+
+🔆 **--> We're reducing the number of PUT requests to S3, cause our data is now accumulating in batches** 
+
+This means --> 
+                **Buffer Size ∝ Latency in delivery  ∝ 1 / costs we'll incur**
+
+</br>
+
+🔆 **--> We're also reducing on our <ins>"per-operation overhead".</ins>** (There'll always be some operational overhead, like disk writes, network calls while data transmission...)
+
+>  When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍 
+
+</br>
+
+🔆 --> We wanted to ensure we're going conservative on CPU time on handling I/O operations. Also, we're cognizant of the API Limits 👍
+            
+> I might also crank up the buffer interval to 900 seconds for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
+
+ </br>
  
- A couple of reasons here:-
+### 2 - We had to utilise Data Compression and modify the data formats
+
+Whenever we're dealing with Streaming data solutions,  **core objective that'll guide our decisions, will be reducing the amount of data transmitted over the network.**
+
+> Why?            
+> ➜ charges would typically be based on data transfer rates plus data storage rates.            
+> ➜ lower the size of data transmitted --> higher transfer speed --> reduced costs                
+
+ Hence, used Snappy for compressing the data.            
  
- **--> It helps us reduce storage costs significantly**.  
- 
- **--> We were looking for an efficient kind of query mechanism for Athena**. And **Parquet's columnar structure** works very well.
 
-</br>
-  
-### _B --> Optimising the buffer size & interval:-_
+Second, we had to modify the data formats we've used. Shifted to a columnar Parquet format.
 
-**We had to maximize the buffer interval time for data delivery into S3.**
-
-</br>
-
-**_Rationale behind this:-_**  
-By allowing Data to accumulate in large batches before delivery, we're **_reducing the number of PUT requests to S3_**, thereby reducing transaction costs. This also results in **_improvising the throughput_** through batching and subsequent storage. Something around **_300-600 seconds_** would be a good number to start with.
-
-Buffer Size has been maximised, Costs would be lowered, but **_at the cost of a higher latency_**. 
-
-Cranking up the Buffer Interval to **_900 seconds_** (max possible) would be a relative choice.  
-***Point to Note:-- We need to strike balance between the **timely availability of data versus the operational costs** incurred.****
+> I had three things in mind while making this decision :-
+> 
+> 1 --> We had to optimise on the query performance.  So, when we've got a columnar orientation, it'll help for selectively reading subsets of columns, That are actually needed for the query . This means less data needs to be read from disk, --> Faster Query performance. Awesome!                    
+> 2 --> Once I reduce the amount of volume scanned during queries, I reduce the costs associated with data analytics 👍                
+> 3 - We'll subsequently have lower storage costs as well, Plus point for cost savings 
 
 </br>
 
-### _Snappy Compression  Encryption for S3 -_
-
-&#8594; I've utilized **_Snappy compression_** for source records
-
-> Why did we compress the records? Its equal to faster transmission plus cost savings in storage. I'm prioritising **_high speed over a higher compression ratio*_*.
- 
-&#8594; **_Encryption_** is implemented through **_AWS-owned keys_** for security and confidentiality of data as it moves through the Firehose stream, particularly crucial when converting data formats like JSON to Parquet.
+Okay, so we're pretty good as far as the "data aspects" are concerned. Let's now move on to Error handling! 🙂
 
 </br>
+
+### 3 -- We've used some smart partitioning in S3 - for segregating the error outputs 
+
+👉 So, firehose automatically configures retries, that's not something we need to take care of.
+
+However, **we'll do some partitioning via S3 prefixes such that any failed data deliveries are differentiated from the normal outputs.** 
+
+</br>
+
+> We'll use s3 prefixes, just akin to directory structures, helps me logically segment out the error outputs.
+>
+>  --> Faster troubleshooting + recovery 👍. Records that aren't delivered are segregated plus accessible.
+
+</br>
+
+## Scope for improvement -- If I were to refine this project, from a security standpoint
+
+We're already done with Encyption for S3 - using AWS-owned keys, so data at rest is now encrypted. IAM Policies have been locked down, they're resource- and action - specific. 
+
+</br>
+
+> Considerations would change when we're dealing with ingesting heavy volumes of data. We had to adapt the design to ensure _it scales up well._ 
+
+</br>
+
+
+### I'd set up Firehose to use VPC Endpoints
+
+It answers 4 "whys":-
+
+✨ When I'm using a VPC Endpoint, this means my data would never traverse the public internet, It would be within AWS private network,     
+    
+ --> A - We're not leaving the AWS Private Network, this means any data communication between firehose and VPC Endpoint for S3 won't traverse the public internet --> significant cost savings, because we're _working at scale_    
+    
+ --> B - This also means that we're preventing any sort of public exposure. So, it does enhance our solution from a security standpoint  
+    
+ --> C - It's a plus point for performance as well, We're eliminating unnecessary hops through the public internet. = Less Latency 👍
+    
+ --> D - VPC Endpoint Policies means we've got a tighter granular access control.
+
+</br>
+
+
+## In Brief - Design Considerations for the supporting elements
+
+The Data Transformation Lambda
+
+</br>
+
+> These are the very typical considerations you'd opt for when looking to scale up. My project "ServerlessChatApp - DynamoWaveChat" - provides a very in depth explanation on enhancing Lambda from a non-functional standpoint.
+
+</br>
+
+╰⪼ Went ahead with Provisioned Concurrency for lambda -- We're pre-warming instances to prevent cold starts    
+╰⪼ We've used the reserved concurrency parameter -- Something we've done for a fair utilisation amongst resources    
+
+</br>
+
+>  We did contemplate having some retry mechanisms, but now firehose would automatically take care of retries
+
+</br>
+
+╰⪼  I actually uphold stability and service continuity as one of my driving factors. We've implemented service limiting plus throttling as well.
+
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
 
@@ -239,9 +390,7 @@ The **key service we've used here is Kinesis Data Analytics (KDA)**
 
 ⚙️ This is **Workflow #2**     
 
-As we've mentioned, data is ingested through KDS in the form of JSON Blobs. 
-
-We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**. 
+As we've mentioned, Streaming data is ingested through Kinesis Data Streams, This ingested data would then be processed by a Flink SQL Application deployed on KDA Studio --- that's Kinesis Data Analytics. Post processing, we've sent our processed data to OpenSearch, for visualisation and analytics of historic data.
 
 </br>
 
@@ -252,18 +401,28 @@ We'll use a **Flink Application** deployed on  **Kinesis Data Analytics**.
 
 </br>
 
+
+**As I've mentioned above, all the complex data processing / heavy data transformations have been offloaded to Flink, It's best for running such kind of stateful computations (They require the state to be retained across operations, hence stateful) on the data as its being streamed in.**
+
+
+</br>
+
 ### Why did we incorporate OpenSearch alongside Flink?
 
 Flink is awesome for _real-time data processing_
 
 > ➡️ **This means it'll help us in performing some complex computations, _as data flows through the system_**
 
-However, once we're done with processing, **OpenSearch will be our search and analytics engine                                                 
---> It helps us in _actually extracting useful insights from the processed data + some data visualisation capabilities_** 👍
+However, once we're done with processing, **OpenSearch will be our search and analytics engine FOR HISTORIC DATA                                                 
+--> It helps us in _ACTUALLY EXTRACTING USEFUL INSIGHTS from the processed data + some data visualisation capabilities_** 👍
 
 </br>
 
-## How does the workflow actually look like?
+
+
+
+
+## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
  **We've defined a Kinesis Connector for Flink** to read from the Stream            
    &nbsp;    **↓**            
