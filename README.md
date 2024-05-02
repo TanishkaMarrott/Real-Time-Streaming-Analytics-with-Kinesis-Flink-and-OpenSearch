@@ -242,12 +242,18 @@ Will then assemble the records to be sent to firehose
 
 </br>
 
+This transformed data would now be dumped into the S3 bucket, ready for querying through Athena. 
+Hence, we're throug with workflow #1
+
+> Now, let's quickly review te non-functional enhancements we've made for this workflow's transformation layer
+
+</br>
 
 ## Non-functional design decisions for the transformation layer
 
 </br>
 
-> I'll go component wise here, as to how we'd optimize on the non-functional aspects of this layer
+> I'll go component wise here, on the design consideration I've made in this layer
 
 </br>
 
@@ -351,12 +357,30 @@ It answers 4 "whys":-
     
  --> D - VPC Endpoint Policies means we've got a tighter granular access control.
 
+</br>
 
 
+## In Brief - Design Considerations for the supporting elements
 
-
+The Data Transformation Lambda
 
 </br>
+
+> These are the very typical considerations you'd opt for when looking to scale up. My project "ServerlessChatApp - DynamoWaveChat" - provides a very in depth explanation on enhancing Lambda from a non-functional standpoint.
+
+</br>
+
+╰⪼ Went ahead with Provisioned Concurrency for lambda -- We're pre-warming instances to prevent cold starts    
+╰⪼ We've used the reserved concurrency parameter -- Something we've done for a fair utilisation amongst resources    
+
+</br>
+
+>  We did contemplate having some retry mechanisms, but now firehose would automatically take care of retries
+
+</br>
+
+╰⪼  I actually uphold stability and service continuity as one of my driving factors. We've implemented service limiting plus throttling as well.
+
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
 
