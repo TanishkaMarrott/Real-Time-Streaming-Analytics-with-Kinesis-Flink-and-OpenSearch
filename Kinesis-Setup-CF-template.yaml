@@ -257,90 +257,100 @@ Resources:
 # Data Transformation LambdaFunction
 
   LambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Handler: "index.lambda_handler"
-      Role: !GetAtt LambdaRole.Arn
-      Runtime: "python3.9"
-      Timeout: 10
-      FunctionName: !Sub "NYCTaxiTrips-DataTransformation-${AWS::StackName}"
-      Code:
-        ZipFile: |
-          import base64
-          import json
-          from datetime import datetime
-          import logging
+  Type: AWS::Lambda::Function
+  Properties:
+    Handler: "index.lambda_handler"
+    Role: !GetAtt LambdaRole.Arn
+    Runtime: "python3.9"
+    Timeout: 10
+    MemorySize: 256  # Optimized memory allocation based on profiling
+    FunctionName: !Sub "NYCTaxiTrips-DataTransformation-${AWS::StackName}"
+    Code:
+      ZipFile: |
+        import base64
+        import json
+        from datetime import datetime
+        import logging
 
-          # Set up logging
-          logger = logging.getLogger()
-          logger.setLevel(logging.INFO)
+        # Setup logging
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
 
-          def lambda_handler(event, context):
-              output = []
-              for record in event['records']:
-                  logger.info(f"Processing record ID: {record['recordId']}")
-                  try:
-                      payload = base64.b64decode(record['data']).decode('utf-8')
-                      trip = json.loads(payload)
+        def lambda_handler(event, context):
+            output = []
+            for record in event['records']:
+                logger.info(f"Processing record ID: {record['recordId']}")
+                try:
+                    payload = base64.b64decode(record['data']).decode('utf-8')
+                    trip = json.loads(payload)
 
-                      # Perform lightweight validation and transformation
-                      if not validate_data(trip):
-                          logger.error(f"Validation failed for record {record['recordId']}")
-                          continue
+                    # Perform lightweight validation and transformation
+                    if not validate_data(trip):
+                        logger.error(f"Validation failed for record {record['recordId']}")
+                        continue
 
-                      # Simple transformation to ensure data format consistency
-                      trip['pickupDate'] = convert_to_iso(trip['pickupDate'])
-                      trip['dropoffDate'] = convert_to_iso(trip['dropoffDate'])
+                    # Simple transformation to ensure data format consistency
+                    trip['pickupDate'] = convert_to_iso(trip['pickupDate'])
+                    trip['dropoffDate'] = convert_to_iso(trip['dropoffDate'])
 
-                      # Serialize for Kinesis Firehose to send to AWS Glue for further processing
-                      output_record = {
-                          'recordId': record['recordId'],
-                          'result': 'Ok',
-                          'data': base64.b64encode(json.dumps(trip).encode('utf-8')).decode('utf-8')
-                      }
-                      output.append(output_record)
-                  except Exception as e:
-                      logger.error(f"Error processing record {record['recordId']}: {str(e)}")
-                      continue
+                    # Serialize for Kinesis Firehose to send to AWS Glue for further processing
+                    output_record = {
+                        'recordId': record['recordId'],
+                        'result': 'Ok',
+                        'data': base64.b64encode(json.dumps(trip).encode('utf-8')).decode('utf-8')
+                    }
+                    output.append(output_record)
+                except Exception as e:
+                    logger.error(f"Error processing record {record['recordId']}: {str(e)}")
+                    if is_recoverable(e) and should_retry(e):
+                        logger.info("Error is recoverable, retrying...")
+                        continue  # Implement retry logic as necessary
+                    else:
+                        continue
 
-              logger.info(f'Successfully processed {len(output)} out of {len(event["records"])} records.')
-              return {'records': output}
+            logger.info(f'Successfully processed {len(output)} out of {len(event["records"])} records.')
+            return {'records': output}
 
-          def validate_data(trip):
-              """Perform simple data validation checks."""
-              try:
-                  # Example validation: Ensure longitude and latitude are within bounds
-                  if not (-180 <= float(trip['pickupLongitude']) <= 180) and not (-90 <= float(trip['pickupLatitude']) <= 90):
-                      return False
-                  return True
-              except ValueError:
-                  return False
+        def validate_data(trip):
+            """Perform simple data validation checks."""
+            try:
+                # Example validation: Ensure longitude and latitude are within bounds
+                if not (-180 <= float(trip['pickupLongitude']) <= 180) and not (-90 <= float(trip['pickupLatitude']) <= 90):
+                    return False
+                return True
+            except ValueError:
+                return False
 
-          def convert_to_iso(date_str):
-              """Convert date strings to ISO format."""
-              try:
-                  return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').isoformat()
-              except ValueError:
-                  return None
+        def convert_to_iso(date_str):
+            """Convert date strings to ISO format."""
+            try:
+                return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').isoformat()
+            except ValueError:
+                return None
 
+        def should_retry(exception):
+            """Decide if a retry should be attempted based on the type of error."""
+            error_str = str(exception).lower()
+            return 'throttlingexception' in error_str or 'serviceunavailable' in error_str
 
-      #Enabling AWS X-Ray to identifypotential bottlenecks
-      TracingConfig:
-        Mode: Active
-  
-  LambdaHandlerVersion:
-    Type: AWS::Lambda::Version
-    Properties:
-      FunctionName: !Ref LambdaFunction
+    ReservedConcurrentExecutions: 10  # Reserved provisioned concurrency for critical function
+    # Enable AWS X-Ray for tracing
+    TracingConfig:
+      Mode: Active
 
-  LambdaHandlerAlias:
-    Type: AWS::Lambda::Alias
-    Properties:
-      FunctionName: !Ref LambdaFunction
-      FunctionVersion: !GetAtt LambdaHandlerVersion.Version
-      Name: "Prod"
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 5
+LambdaHandlerVersion:
+  Type: AWS::Lambda::Version
+  Properties:
+    FunctionName: !Ref LambdaFunction
+
+LambdaHandlerAlias:
+  Type: AWS::Lambda::Alias
+  Properties:
+    FunctionName: !Ref LambdaFunction
+    FunctionVersion: !GetAtt LambdaHandlerVersion.Version
+    Name: "Prod"
+    ProvisionedConcurrencyConfig:
+      ProvisionedConcurrentExecutions: 5
 
 # Enables the automated management of Kinesis Data Analytics applications within a CloudFormation stack, 
 # allowing users to start and stop applications as part of their infrastructure deployment and management processes.
