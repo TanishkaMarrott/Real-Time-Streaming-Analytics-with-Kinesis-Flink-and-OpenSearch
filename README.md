@@ -343,7 +343,7 @@ We're already done with Encyption for S3 - using AWS-owned keys, so data at rest
 </br>
 
 
-### I'd set up Firehose to use VPC Endpoints
+### I'd set up Firehose to use VPC Endpoint for interacting with S3
 
 It answers 4 "whys":-
 
@@ -359,6 +359,9 @@ It answers 4 "whys":-
 
 </br>
 
+> In the next revision/ re-iteration, we'd be setting up AWS lambda to send the processed data via firehose to the S3 VPC endpoint. This _would_ be one of the prudent decisions we'll make, wherein we're actually adapting to scaling volumes, while still being cognizant of security plus performance aspects
+
+</br>
 
 ## In Brief - Design Considerations for the supporting elements
 
@@ -366,20 +369,25 @@ The Data Transformation Lambda
 
 </br>
 
-> These are the very typical considerations you'd opt for when looking to scale up. My project "ServerlessChatApp - DynamoWaveChat" - provides a very in depth explanation on enhancing Lambda from a non-functional standpoint.
+> **These are the very typical considerations you'd opt for when looking to scale up.** My project "ServerlessChatApp - DynamoWaveChat" - provides a very in-depth explanation on enhancing Lambda from a non-functional standpoint.
 
 </br>
 
-╰⪼ Went ahead with Provisioned Concurrency for lambda -- We're pre-warming instances to prevent cold starts    
-╰⪼ We've used the reserved concurrency parameter -- Something we've done for a fair utilisation amongst resources    
+╰⪼ **Went ahead with Provisioned Concurrency for lambda** -- **We're pre-warming instances to prevent cold starts**   
+ We've used the reserved concurrency parameter -- Something we've done for a fair utilisation amongst resources
+
+╰⪼  **I actually uphold stability and service continuity as one of my driving factors.** We've implemented service limiting plus throttling as well. 
+
+╰⪼ **We've integrated AWS X-Ray,**            
+_Purpose:-_ Figuring out potential bottlenecks 🟰 Bolstering our performance ✅
+
+╰⪼ **Plus, some settings around memory allocation and timeouts**
+This helps us prevent excessive running times ---> Optimizing on resource utilisation 👍
 
 </br>
 
->  We did contemplate having some retry mechanisms, but now firehose would automatically take care of retries
+The Glue Table
 
-</br>
-
-╰⪼  I actually uphold stability and service continuity as one of my driving factors. We've implemented service limiting plus throttling as well.
 
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
@@ -387,6 +395,8 @@ The Data Transformation Lambda
 The **key service we've used here is Kinesis Data Analytics (KDA)**
 
 </br>
+
+
 
 ⚙️ This is **Workflow #2**     
 
