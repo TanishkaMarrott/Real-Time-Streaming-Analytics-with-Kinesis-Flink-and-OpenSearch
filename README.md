@@ -392,7 +392,7 @@ This helps us prevent excessive running times ---> Optimizing on resource utilis
 
 </br>
 
-> What kind of a value-add does it bring in?
+> _What kind of a value-add does it bring in?_ 
 
 </br>
 
@@ -402,7 +402,7 @@ Reason 1 ➣ More data = More data processing. **As we're adapting to scale, we 
 
 </br>
 
-> ⏩ Optimisation = equals faster execution times and subsequently a better data throughput
+> ⏩ --> faster execution times and subsequently a better data throughput
 
 </br>
 
@@ -416,18 +416,24 @@ Reason 1 ➣ More data = More data processing. **As we're adapting to scale, we 
 
 </br>
 
-### How've we "robust-ed" up Glue, Athena plus S3:-
+> Just a quick note, we're using Glue more as a Metadata Repository, rather than as something for ETL,
+> And, this _is_ pivotal, because it'll help organise the data and improvise on the efficiency of our query services downstream, It'll leverage this metadat catalog, to parse and understand the structure of the data, that's stored in s3
+> So, all of our enhancements in this section would be geared towards the enhancing the cataloging capability of glue.
+>
+> As and when, we'd introduce ETL capabilities utilising glue, we'll revisit and improvise glue from an ETL standpoint as well
 
-1 - We've done some Partitioning schemes in glue -- First, time-based, aligned with the kind of query patterns. We've diversified further into granular partitioning as well, based on the VendorID                    
-
-2 - Compression plus columnar storage - already done - This'll help us enhance query performance in Athena. Columnar format means very scanning a selective subset of data.
-
-3 - For S3, we've implemented some lifecycle policies, transitioning to a cheaper storage class --> Intelligent Tiering 
-
-
+</br>
 
 
+### How have we "robust-ed" up Glue, Athena plus S3:-
 
+1 - **We've done some Partitioning schemes in glue** -- **First, time-based**, aligned with the kind of query patterns. **We've diversified further into granular partitioning as well, based on the VendorID**          
+
+2 - **Compression plus columnar storage - already done** - This'll help us enhance query performance in Athena. Columnar format means very scanning a selective subset of data.
+
+3 - **For S3, we've implemented some lifecycle policies**, transitioning to a cheaper storage class --> **Intelligent Tiering** 
+
+4 - 
 
 
 
@@ -455,9 +461,7 @@ As we've mentioned, Streaming data is ingested through Kinesis Data Streams, Thi
 
 </br>
 
-
 **As I've mentioned above, all the complex data processing / heavy data transformations have been offloaded to Flink, It's best for running such kind of stateful computations (They require the state to be retained across operations, hence stateful) on the data as its being streamed in.**
-
 
 </br>
 
@@ -472,10 +476,6 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-
-
-
-
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
  **We've defined a Kinesis Connector for Flink** to read from the Stream            
@@ -489,7 +489,6 @@ However, once we're done with processing, **OpenSearch will be our search and an
 **We'll then execute some analytical queries** --> Insights into some critical metrics                                    
    &nbsp;     ↓            
 Finally, **some data aggregation & visualization with summarized data**            
-
 
 </br>
 
