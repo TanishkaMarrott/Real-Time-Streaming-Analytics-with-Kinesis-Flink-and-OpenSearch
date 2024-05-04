@@ -363,9 +363,9 @@ It answers 4 "whys":-
 
 </br>
 
-## In Brief - Design Considerations for the supporting elements
+## Design Considerations for the supporting elements as well
 
-The Data Transformation Lambda
+### 1 --> Data transformation lambda
 
 </br>
 
@@ -379,15 +379,59 @@ The Data Transformation Lambda
 ╰⪼  **I actually uphold stability and service continuity as one of my driving factors.** We've implemented service limiting plus throttling as well. 
 
 ╰⪼ **We've integrated AWS X-Ray,**            
-_Purpose:-_ Figuring out potential bottlenecks 🟰 Bolstering our performance ✅
+_Purpose:-_ Figuring out potential bottlenecks = improvising on our performance ✅
 
 ╰⪼ **Plus, some settings around memory allocation and timeouts**
 This helps us prevent excessive running times ---> Optimizing on resource utilisation 👍
 
 </br>
 
-The Glue Table
+### Glue, Athena + S3 :-
 
+### Why did we end up optimising the supporting elements as well?
+
+</br>
+
+> What kind of a value-add does it bring in?
+
+</br>
+
+
+Reason 1 ➣ More data = More data processing. **As we're adapting to scale, we could not afford leaving these data processing components un-optimised.**                    
+
+
+</br>
+
+> ⏩ Optimisation = equals faster execution times and subsequently a better data throughput
+
+</br>
+
+ Reason 2 ➣  **If we fine-tune on the resource allocation, we'll cut down on the number of DPUs consumed. This means lesser costs.**
+
+</br>
+
+ Reason 3 ➣ As things scale up, so should it's reliability. **Retry + Error Handling mechanisms =                
+     A --> data integrity and consistency                
+     B --> Plus, our solution bears the capability to reciver from transient-kind of failures, without our intervention**             
+
+</br>
+
+### How've we "robust-ed" up Glue, Athena plus S3:-
+
+1 - We've done some Partitioning schemes in glue -- First, time-based, aligned with the kind of query patterns. We've diversified further into granular partitioning as well, based on the VendorID                    
+
+2 - Compression plus columnar storage - already done - This'll help us enhance query performance in Athena. Columnar format means very scanning a selective subset of data.
+
+3 - For S3, we've implemented some lifecycle policies, transitioning to a cheaper storage class --> Intelligent Tiering 
+
+
+
+
+
+
+
+
+> The baseline is that if the elements that're the part of the data processing workflow are robust, a
 
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
