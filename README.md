@@ -467,8 +467,6 @@ The **key service we've used here is Kinesis Data Analytics (KDA)**
 
 </br>
 
-
-
 ⚙️ This is **Workflow #2**     
 
 As we've mentioned, Streaming data is ingested through Kinesis Data Streams, This ingested data would then be processed by a Flink SQL Application deployed on KDA Studio --- that's Kinesis Data Analytics. Post processing, we've sent our processed data to OpenSearch, for visualisation and analytics of historic data.
@@ -511,7 +509,9 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 > We actually wanted to have a level of fault-tolerance / data recovery as one of the imperatives we were seeking to achieve.
 
-3 ➾ 
+3 ➾ We went ahead with some checkpointing --> it actually captures the state of the flink application at a given point in time. We can configure andadjust the checkpointing intervals , and min pause --> We would need to ensure that our application remains consistent and functional at all times, however, we shouldn't be introducing unnecessary overhead. Hence, we'll be good from a data recovery standpoint.
+
+4 ➾ Plus, cost alerts and tightened up IAM policies would ensure we're covered in terms of budget considerations plus access security.
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
