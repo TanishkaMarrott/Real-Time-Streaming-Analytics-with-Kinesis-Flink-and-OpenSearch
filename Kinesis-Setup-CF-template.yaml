@@ -218,16 +218,25 @@ Resources:
     Type: AWS::KinesisAnalyticsV2::Application
     Properties: 
       ApplicationName: !Sub 'KDA-studio-1-${AWS::StackName}'
-      ApplicationDescription: Kinesis Flink Sql Demo
+      ApplicationDescription: Kinesis Flink SQL Demo
       RuntimeEnvironment: ZEPPELIN-FLINK-2_0
       ApplicationMode: INTERACTIVE
       ServiceExecutionRole: !GetAtt 'KinesisAnalyticsRole.Arn'
       ApplicationConfiguration:
         FlinkApplicationConfiguration:
+          MonitoringConfiguration:  
+            LogLevel: INFO  # Saving on Log Costs
+            MetricsLevel: APPLICATION  # Monitoring/ Debugging metrics
           ParallelismConfiguration:
             ConfigurationType: CUSTOM
             Parallelism: 4
             ParallelismPerKPU: 1
+            AutoScalingEnabled: TRUE  # We're optimising on resource usage 
+          CheckpointConfiguration:  # Enable checkpointing for fault tolerance
+            ConfigurationType: DEFAULT
+            CheckpointingEnabled: TRUE
+            CheckpointInterval: 300000  # Checkpoint interval in milliseconds
+            MinPauseBetweenCheckpoints: 10000  # Min pause between checkpoints to optimize performance
         ZeppelinApplicationConfiguration:
           CatalogConfiguration:
             GlueDataCatalogConfiguration:
@@ -237,11 +246,6 @@ Resources:
               MavenReference:
                 GroupId: org.apache.flink
                 ArtifactId: flink-sql-connector-kinesis_2.12
-                Version: 1.13.2
-            - ArtifactType: DEPENDENCY_JAR
-              MavenReference:
-                GroupId: org.apache.flink
-                ArtifactId: flink-connector-kafka_2.12
                 Version: 1.13.2
             - ArtifactType: DEPENDENCY_JAR
               MavenReference:
