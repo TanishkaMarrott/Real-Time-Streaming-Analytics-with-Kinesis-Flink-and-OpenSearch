@@ -283,12 +283,16 @@ This means -->
 
 🔆 **--> We're also reducing on our <ins>"per-operation overhead".</ins>** (There'll always be some operational overhead, like disk writes, network calls while data transmission...)
 
+</br>
+
 >  When we're performing batching, I'm effectively "spreading" this fixed overhead across multiple data items 🙂 👍 
 
 </br>
 
 🔆 --> We wanted to ensure we're going conservative on CPU time on handling I/O operations. Also, we're cognizant of the API Limits 👍
-            
+
+</br>
+
 > I might also crank up the buffer interval to 900 seconds for absolutely low costs. But I'd appreciate the tradeoff, and 360 seconds looks like a good start for me.
 
  </br>
@@ -430,13 +434,13 @@ Reason 1 ➣ More data = More data processing. **As we're adapting to scale, we 
 1 - **We've done some Partitioning schemes in glue** -- **First, time-based**, aligned with the kind of query patterns. **We've diversified further into granular partitioning as well, based on the VendorID**    
 What was the reason? We're scanning only sections relevant to the partition
 
-2 - **Compression plus columnar storage - already done** - This'll help us enhance query performance in Athena. Means we're 
+2 - **Compression plus columnar storage - already done** - This'll help us enhance query performance in Athena. Retrieval becomes easier in a columnar orientation.
 
-3 - **For S3, we've implemented some lifecycle policies**, transitioning to a cheaper storage class --> **Intelligent Tiering** 
+3 - **For S3, we've implemented some lifecycle policies**, transitioning to a cheaper storage class --> **Intelligent Tiering** . Rest are typical to S# use-cases :- Versioning, KMS encryption etc.
 
 </br>
 
-> We were planning of implementing something in lines with metadata cacging, --> our structure / schema definition won't change frequently. In such a scenario, should we cache this data, such that query services downstream do not need to in turn query the data catalog repetitively for understanding the structure of data, and accordingly understand the structure of data in S3.                
+> We were planning of implementing something in lines with metadata caching, --> our structure / schema definition won't change frequently. In such a scenario, should we cache this data, such that query services downstream do not need to in turn query the data catalog repetitively for understanding the structure of data, and accordingly understand the structure of data in S3.                
 > We've not got any native caching in Glue, so we'd have to go with something custom-made here.
 
 </br>
@@ -449,7 +453,12 @@ So, we could have a lambda that pre-fetches the metasata through triggered queri
 
 </br>
 
-> The baseline is that if the elements that're the part of the data processing workflow are robust, we'll be good to amp up the performance of the overall solution,
+> If we would be in a situation wherein the metadat changes quite frequently, we could ingrain some sort of automated schema management. Our current scenario doesn't demand a crawler setup to automatically scan data sources, and automatically update schema definitions in Glue, based on the schemas it has inferred. But, yes, we could definitely set up one. More of a cost and performance tradeoff, I'd say.
+
+</br>
+
+-----If we were to amp up Athena , one step further, in terms of organizational efficiency, we'd make use of Workgroups to separate different projects / teams, That'll help us enforce usage controls, and tighten up on the access controls---
+
 
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
@@ -487,6 +496,22 @@ However, once we're done with processing, **OpenSearch will be our search and an
 --> It helps us in _ACTUALLY EXTRACTING USEFUL INSIGHTS from the processed data + some data visualisation capabilities_** 👍
 
 </br>
+
+### Optimsing KDA from a non-functional standpoint
+
+</br>
+
+> I orinally come from an Ops team, hence you'll find a taste or rather an emphasis on non-functional aspects in my design! 🙂
+
+</br>
+
+1 ➾ We decided to incorporate  "Parallelism" into our application code. It's basically the number of concurrent tasks, our application is capable of performing. And, we made it auto-scale, that means, it'll adjust dynamically based on the workload requirements, there won't be idle threads neither there would be too much context-switching --> An efficient Resource utilisation ☑️ 👍
+
+2 ➾ We've implemented logging and monitoring specifically for KDA --> this'll aid in troubleshooting, and recovery. We could accordingly adjeust the volume of logs ingested into CloudTrail, based on our budget considerations.
+
+> We actually wanted to have a level of fault-tolerance / data recovery as one of the imperatives we were seeking to achieve.
+
+3 ➾ 
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
