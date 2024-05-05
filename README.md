@@ -427,17 +427,29 @@ Reason 1 ➣ More data = More data processing. **As we're adapting to scale, we 
 
 ### How have we "robust-ed" up Glue, Athena plus S3:-
 
-1 - **We've done some Partitioning schemes in glue** -- **First, time-based**, aligned with the kind of query patterns. **We've diversified further into granular partitioning as well, based on the VendorID**          
+1 - **We've done some Partitioning schemes in glue** -- **First, time-based**, aligned with the kind of query patterns. **We've diversified further into granular partitioning as well, based on the VendorID**    
+What was the reason? We're scanning only sections relevant to the partition
 
-2 - **Compression plus columnar storage - already done** - This'll help us enhance query performance in Athena. Columnar format means very scanning a selective subset of data.
+2 - **Compression plus columnar storage - already done** - This'll help us enhance query performance in Athena. Means we're 
 
 3 - **For S3, we've implemented some lifecycle policies**, transitioning to a cheaper storage class --> **Intelligent Tiering** 
 
-4 - 
+</br>
 
+> We were planning of implementing something in lines with metadata cacging, --> our structure / schema definition won't change frequently. In such a scenario, should we cache this data, such that query services downstream do not need to in turn query the data catalog repetitively for understanding the structure of data, and accordingly understand the structure of data in S3.                
+> We've not got any native caching in Glue, so we'd have to go with something custom-made here.
 
+</br>
 
-> The baseline is that if the elements that're the part of the data processing workflow are robust, a
+#### How would the custom caching workflow look like?
+So, we could have a lambda that pre-fetches the metasata through triggered queries to the catalog, And subsequently store it in either a Redis /Memcached cluster.
+--> Retrieving Data from an in-momory cache is faster than hitting the catalog for retrieving the specifics around metadata
+
+5 -  **Another option, we've got is setting up some query result caching in Athena**. This will ensure the most frequent query results have been cached. Reducing excution times of queries 👍
+
+</br>
+
+> The baseline is that if the elements that're the part of the data processing workflow are robust, we'll be good to amp up the performance of the overall solution,
 
 
 ## ***Workflow #2:- Stream Processing & Visualisation**
