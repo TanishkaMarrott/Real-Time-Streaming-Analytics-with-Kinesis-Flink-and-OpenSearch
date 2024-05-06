@@ -523,7 +523,11 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 #### OpenSearch from an NF standpoint:-
 
+➥ we've chosen for a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
 
+➥ Scalability plus fault-tolerance ingrained -->  We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus HA - high availability, and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
+
+➥ Also, we've made it a point, to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, Encryption at rest
 
 
 
