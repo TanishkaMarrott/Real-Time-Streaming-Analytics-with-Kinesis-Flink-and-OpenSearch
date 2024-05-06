@@ -66,8 +66,6 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
 
 #### Approach I - When I used _solely_ ExecutorService
 
-
-
 #### What exactly was the lacuna here?
 
  So, the ExecutorService we've been using here does enable concurrent execution. --> It allows multiple threads to run in parallel.  
@@ -534,17 +532,9 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
- **We've defined a Kinesis Connector for Flink** to read from the Stream            
-   &nbsp;    **↓**            
-**And an OpenSearch Connector** to write processed data to OpenSearch            
-   &nbsp;     **↓**                        
-**We've then created the taxi_trips table in Flink** and **then linked it to the Kinesis stream** --> _virtual data mapping_                        
-   &nbsp;     ↓            
-**Our trip_statistics table in OpenSearch will store aggregated data** --> trip counts and average duration            
-   &nbsp;     ↓                        
-**We'll then execute some analytical queries** --> Insights into some critical metrics                                    
-   &nbsp;     ↓            
-Finally, **some data aggregation & visualization with summarized data**            
+> I'll quickly discuss this in brief, to make our discussion more holistic
+
+I start with data stream configuration, Flink has been configured to continuously read data from 
 
 </br>
 
