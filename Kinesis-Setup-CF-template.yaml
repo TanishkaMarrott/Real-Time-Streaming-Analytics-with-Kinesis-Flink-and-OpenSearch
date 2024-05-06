@@ -236,7 +236,7 @@ Resources:
             ConfigurationType: DEFAULT
             CheckpointingEnabled: TRUE
             CheckpointInterval: 300000  # Checkpoint interval in milliseconds
-            MinPauseBetweenCheckpoints: 10000  # Min pause between checkpoints to optimize performance
+            MinPauseBetweenCheckpoints: 10000  # Optimising on performance
         ZeppelinApplicationConfiguration:
           CatalogConfiguration:
             GlueDataCatalogConfiguration:
@@ -479,7 +479,7 @@ LambdaHandlerAlias:
       EngineVersion: 'OpenSearch_1.2'
       ClusterConfig:
         InstanceCount: 2 #Fault Tolerance & Scalabality
-        InstanceType: t3.medium.search
+        InstanceType: "c5.large"  # Updated the instance type - this will be compute-optimised 
       AccessPolicies:
         Version: '2012-10-17'
         Statement:
