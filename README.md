@@ -459,9 +459,9 @@ So, we could have a lambda that pre-fetches the metasata through triggered queri
 
 -----If we were to amp up Athena , one step further, in terms of organizational efficiency, we'd make use of Workgroups to separate different projects / teams, That'll help us enforce usage controls, and tighten up on the access controls---
 
+</br>
 
-
-## ***Workflow #2:- Stream Processing & Visualisation**
+## **Workflow #2:- Stream Processing & Visualisation**
 
 The **key service we've used here is Kinesis Data Analytics (KDA)**
 
@@ -505,19 +505,28 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 #### KDA :-
 
-1 ➾ We decided to incorporate  "Parallelism" into our application code. It's basically the number of concurrent tasks, our application is capable of performing. And, we made it auto-scale, that means, it'll adjust dynamically based on the workload requirements, there won't be idle threads neither there would be too much context-switching --> An efficient Resource utilisation ☑️ 👍
+1 ➾ **We decided to incorporate  "Parallelism" into our application code**. It's basically the number of concurrent tasks, our application is capable of performing. **And, we made it auto-scale, that means, it'll adjust dynamically based on the workload requirements, there won't be idle threads neither there would be too much context-switching --> An efficient Resource utilisation** ☑️ 👍
 
-2 ➾ We've implemented logging and monitoring specifically for KDA --> this'll aid in troubleshooting, and recovery. We could accordingly adjeust the volume of logs ingested into CloudTrail, based on our budget considerations.
+2 ➾ We've implemented logging and monitoring specifically for KDA --> this'll aid in troubleshooting, and recovery. **We could accordingly adjeust the volume of logs ingested into CloudTrail, based on our budget considerations.**
 
-> We actually wanted to have a level of fault-tolerance / data recovery as one of the imperatives we were seeking to achieve.
+</br>
 
-3 ➾ We went ahead with some checkpointing --> it actually captures the state of the flink application at a given point in time. We can configure andadjust the checkpointing intervals , and min pause --> We would need to ensure that our application remains consistent and functional at all times, however, we shouldn't be introducing unnecessary overhead. Hence, we'll be good from a data recovery standpoint.
+> **We actually wanted to have a level of fault-tolerance / data recovery** as one of the imperatives we were seeking to achieve.
+
+</br>
+
+3 ➾ **Went ahead with some checkpointing --> it actually captures the state of the flink application at a given point in time.** We can configure andadjust the checkpointing intervals , and min pause --> **We would need to ensure that our application remains consistent and functional at all times, however, we shouldn't be introducing unnecessary overhead.** Hence, we'll be good from a data recovery standpoint.
 
 4 ➾ Plus, cost alerts and tightened up IAM policies would ensure we're covered in terms of budget considerations plus access security.
 
 </br>
 
-#### OpenSearch NF aspects
+#### OpenSearch from an NF standpoint:-
+
+
+
+
+
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
