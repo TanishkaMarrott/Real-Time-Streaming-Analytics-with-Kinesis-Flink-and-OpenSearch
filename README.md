@@ -495,13 +495,15 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-### Optimsing KDA from a non-functional standpoint
+### Optimsing these components from a non-functional standpoint
 
 </br>
 
-> I orinally come from an Ops team, hence you'll find a taste or rather an emphasis on non-functional aspects in my design! 🙂
+> I hail from an Ops team, hence you'll always find a flavour or rather an emphasis on non-functional aspects in my design! 🙂
 
 </br>
+
+#### KDA :-
 
 1 ➾ We decided to incorporate  "Parallelism" into our application code. It's basically the number of concurrent tasks, our application is capable of performing. And, we made it auto-scale, that means, it'll adjust dynamically based on the workload requirements, there won't be idle threads neither there would be too much context-switching --> An efficient Resource utilisation ☑️ 👍
 
@@ -512,6 +514,10 @@ However, once we're done with processing, **OpenSearch will be our search and an
 3 ➾ We went ahead with some checkpointing --> it actually captures the state of the flink application at a given point in time. We can configure andadjust the checkpointing intervals , and min pause --> We would need to ensure that our application remains consistent and functional at all times, however, we shouldn't be introducing unnecessary overhead. Hence, we'll be good from a data recovery standpoint.
 
 4 ➾ Plus, cost alerts and tightened up IAM policies would ensure we're covered in terms of budget considerations plus access security.
+
+</br>
+
+#### OpenSearch NF aspects
 
 ## Flink's real-time processing + OpenSearch's data Aggregation and Search 
 
