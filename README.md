@@ -547,14 +547,34 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-## How did we leverage Opensearch's capabilities to cater to our current scenario?
+## Why did we go in for OpenSearch and not for our other Relational DB counterparts?
 
-Opensearch is more of search and analytics tool, it actually bears the capabilities of storing, searching plus analysing the kind of volume and velocity of data that's being processed and pushed from Flink.
+> I _actually_ had this question. Thought of reasoning this, befor I proceed with the workflow
 
-Opensearch 
+The three "why's" which defend the choice of OpenSearch to be integrated into our architecture:-
+
+✨ Reason 1 :- The kind of scalability that comes with OpenSearch. OpenSearch allows for horizontal scaling,  this means we could distribute our data across different nodes of a cluster. Plus, it helps us incorporate the concept of sharding
+
+**Sharding would augment two of our NFRs :-**       
+
+1 - **We wanted our architecture to be tolerant to any node failures - this means we're averting potential chances of data loss,** As shards would be basically independent partitions of data across nodes, and they've got their replicas as well.                
+2 - **We'll be assured that our workload would be aptly redistributed horizontally.** For instance, we're facing a surge in traffic, and we decide to scale up the number of nodes to improve overall capacity and throughput, Opensearch would automatically redistribute the shards across nodes. **This means we'd be maintaining our performance, without any significant reconfiguration from our end.**
+
+</br>
+
+> If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And there'll always be limits to adding power to a server, both practical and physical...
+
+</br>
+
+✨ Reason 2 :-  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
+
+OS has an ultra-low latency between the time document is indexed and the time it becomes searchable -- 
+
+What do I actually mean by this? 🤔 
 
 
 </br>
+
 
 #### OpenSearch from an NF standpoint:-
 
