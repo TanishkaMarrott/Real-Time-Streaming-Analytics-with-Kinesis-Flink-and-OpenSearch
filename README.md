@@ -547,30 +547,48 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-## Why did we go in for OpenSearch and not for our other Relational DB counterparts?
+### Why did we go in for OpenSearch and not for our other Relational DB counterparts?
+
+</br>
 
 > I _actually_ had this question. Thought of reasoning this, befor I proceed with the workflow
 
+</br>
+
 The three "why's" which defend the choice of OpenSearch to be integrated into our architecture:-
 
-✨ Reason 1 :- The kind of scalability that comes with OpenSearch. OpenSearch allows for horizontal scaling,  this means we could distribute our data across different nodes of a cluster. Plus, it helps us incorporate the concept of sharding
+✨ **Reason 1 :-** The kind of scalability that comes with OpenSearch. OpenSearch allows for horizontal scaling,  this means we could distribute our data across different nodes of a cluster. Plus, it helps us incorporate the concept of sharding
 
-**Sharding would augment two of our NFRs :-**       
+</br>
+
+#### **Sharding would augment three of our NFRs :-**  🫰
 
 1 - **We wanted our architecture to be tolerant to any node failures - this means we're averting potential chances of data loss,** As shards would be basically independent partitions of data across nodes, and they've got their replicas as well.                
 2 - **We'll be assured that our workload would be aptly redistributed horizontally.** For instance, we're facing a surge in traffic, and we decide to scale up the number of nodes to improve overall capacity and throughput, Opensearch would automatically redistribute the shards across nodes. **This means we'd be maintaining our performance, without any significant reconfiguration from our end.**
+3 - **We wanted to speed up our query process --> This means multiple shards could be queried in parallel, reducing query response times.** Also, if we've got som replica shards, that'll also enable us to increase our Read Capacity, as search queries could be directed to both primary and replica shards.
+
+I'd say that this _actually_ enables us to pivot on OS's distributed nature 👍
+
+If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And there'll always be limits to adding power to a server, both practical and physical...
+
 
 </br>
 
-> If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And there'll always be limits to adding power to a server, both practical and physical...
-
-</br>
-
-✨ Reason 2 :-  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
+✨ **Reason 2 :-**  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
 
 OS has an ultra-low latency between the time document is indexed and the time it becomes searchable -- 
 
-What do I actually mean by this? 🤔 
+</br>
+
+> That's what real-time analytics is all about. --> As soon as data is sent to Opensearch, it should be almost immediately available for querying. I'll explain how OS achieves this
+
+</br>
+
+I'll give a quick brief as to what an NRT architecture looks like-->
+
+📌 Just as the new documents are in indexed, they're first stored in an in-memory buffer
+
+
 
 
 </br>
