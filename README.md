@@ -519,19 +519,7 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-#### OpenSearch from an NF standpoint:-
-
-➥ we've chosen for a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
-
-➥ Scalability plus fault-tolerance ingrained -->  We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus HA - high availability, and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
-
-➥ Also, we've made it a point, to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, 
-
-
-
-
-
-## Flink's real-time processing + OpenSearch's data Aggregation and Search 
+## The stream processing workflow with Flink
 
 </br>
 
@@ -539,23 +527,36 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-⟢ **I'll start with data stream configuration,** Flink **has been configured to continuously read data from our input stream** - the kinesis stream. **We've set up a Kinesiss Connector that'll aid in pulling in data into Flink.**
+⟢ **I'll start with the data stream configurations,** Flink **has been configured to continuously read data from our input stream** - the kinesis stream. **We've set up a Kinesis Connector that'll aid in pulling in data into Flink.**
+
+</br>
 
 > We'll have our data processed and aggregated in real time, As in raw data would _then be transformed into something actionable_.
 
-⟢ In our case, **we'd be calculating some metrics --> like Avg trip durations, Total trip counts/ hour -- something that transforms raw data into something far more actionable, ➡️ statistics that actually provide real-time insights into trends and patterns** 
+</br>
 
-⟢ We decided to go with some Data masking here, **We've added a small random variation to the actual lat-long coordinates, for the sake of respecting the privacy of the customers --> We're masking the specifics into the geographical coords, while still retaining the utility of the data**...
+⟢ --> **We'd be calculating some metrics --> like Avg trip durations, Total trip counts/ hour -- something that transforms raw data into something far more actionable, ➡️ statistics that actually provide real-time insights into trends and patterns** 
 
-⟢ Will then direct this processed data to our OS table.
+⟢ We decided to go with some Data masking here, **We've added a small random variation to the actual latitude-longitude co-ordinates, for the sake of respecting the privacy of the customers --> We're masking the specifics, while still retaining the utility of the data**...
+
+⟢ Will then direct this processed output data to our OS table.
 
 </br>
 
-#### If we could refine one step further 
+> Okay, so now that we're quite clear with flink's real-time data processing/aggregation capabilities, and how it channelises the output to opensearch, we'll now dive deeper into the Opensearch specifics , and how it's well suited for the context we're in.
 
-
+## How did we leverage Opensearch's capabilities to cater to our current scenario?
 
 </br>
+
+#### OpenSearch from an NF standpoint:-
+
+➥ we've chosen for a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
+
+➥ Scalability plus fault-tolerance ingrained -->  We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus HA - high availability, and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
+
+➥ We've made it a point, to have an array of security considerations made,  to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, 
+
 
 ## Wrapping it Up
 
