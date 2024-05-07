@@ -444,7 +444,7 @@ What was the reason? We're scanning only sections relevant to the partition
 </br>
 
 #### How would the custom caching workflow look like?
-So, we could have a lambda that pre-fetches the metasata through triggered queries to the catalog, And subsequently store it in either a Redis /Memcached cluster.
+So, we could have a lambda that pre-fetches the metadata through triggered queries to the catalog, And subsequently store it in either a Redis /Memcached cluster.
 --> Retrieving Data from an in-momory cache is faster than hitting the catalog for retrieving the specifics around metadata
 
 5 -  **Another option, we've got is setting up some query result caching in Athena**. This will ensure the most frequent query results have been cached. Reducing excution times of queries 👍
@@ -493,7 +493,7 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-### Optimsing these components from a non-functional standpoint
+### Optimising these components from a non-functional standpoint
 
 </br>
 
@@ -531,7 +531,7 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 </br>
 
-> We'll have our data processed and aggregated in real time, As in raw data would _then be transformed into something actionable_.
+> We'll have our data processed and aggregated in real time ➡️As in raw data would _then be transformed into something actionable_.
 
 </br>
 
@@ -545,7 +545,14 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 > Okay, so now that we're quite clear with flink's real-time data processing/aggregation capabilities, and how it channelises the output to opensearch, we'll now dive deeper into the Opensearch specifics , and how it's well suited for the context we're in.
 
+</br>
+
 ## How did we leverage Opensearch's capabilities to cater to our current scenario?
+
+Opensearch is more of search and analytics tool, it actually bears the capabilities of storing, searching plus analysing the kind of volume and velocity of data that's being processed and pushed from Flink.
+
+Opensearch 
+
 
 </br>
 
