@@ -613,6 +613,32 @@ If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And 
 
 </br>
 
+✨ **Reason 2 :-**  The kind of data structures that OpenSearch uses --> Inverted Indices
+
+</br>
+
+> Whenever we're integrating any specific components into our architecture, it's essential to grasp the foundations -- that'll enable us to fine-tune configurations that improvise from a non-functional standpoint 👍
+
+</br>
+
+What do I mean when I say "The document is indexed"?
+
+🔆 The document is first submitted to opensearch. (I've discussed this before, document could be a single trip, a product (it's in a serialised JSON format))
+
+🔆 It'll perform certain steps like splitting the text into several token, filtering down and standardising the tokens (filtering out unnecessary tokens plus conversion to lower case , and yes, this does facilitate consistency in searching)
+
+🔆 --Building an inverted index-- :- It's actually a DS used to store the mapping from content tokens to their location in the documents.
+
+</br>
+
+> I'll give a quick analogy, It's like an index behind the book, that tells you on which page a certain term can be found. 💡
+
+</br>
+
+
+
+
+
 
 #### OpenSearch from an NF standpoint:-
 
