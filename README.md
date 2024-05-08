@@ -557,9 +557,9 @@ However, once we're done with processing, **OpenSearch will be our search and an
 
 The three "why's" which defend the choice of OpenSearch to be integrated into our architecture:-
 
-✨ **Reason 1 :-** The kind of scalability that comes with OpenSearch. OpenSearch allows for horizontal scaling,  this means we could distribute our data across different nodes of a cluster. Plus, it helps us incorporate the concept of sharding
+#### ✨ **Reason 1 :-** The kind of scalability that comes with OpenSearch. 
 
-</br>
+OpenSearch allows for horizontal scaling,  this means we could distribute our data across different nodes of a cluster. Plus, it helps us incorporate the concept of sharding
 
 #### **Sharding would augment three of our NFRs :-**  🫰
 
@@ -571,13 +571,12 @@ I'd say that this _actually_ enables us to pivot on OS's distributed nature 👍
 
 If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And there'll always be limits to adding power to a server, both practical and physical...
 
+--
 
 </br>
 
-✨ **Reason 2 :-**  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
+#### ✨ **Reason 2 :-**  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
 
-
-</br>
 
 > That's what real-time analytics is all about. --> As soon as data is sent to Opensearch, _it should be almost immediately available for querying._ I'll explain how it achieves this
 
@@ -587,9 +586,9 @@ If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And 
 
 </br>
 
-> The core objective or rather the overarching goal of NRT processing is minimizing the latency between ingestion (the time it's indexed) and searchability (the time this data is ready/visible to search queries.)
+> **The core objective or rather the overarching goal of NRT processing is minimizing the latency between ingestion (the time it's indexed) and searchability (the time this data is ready/visible to search queries.)**
 >
->  This is a super-important availability metric whenever we're designing/ dealing with such real-time analytic solutions.  
+>  **This is a super-important availability metric whenever we're designing/ dealing with such real-time analytic solutions.**  
 
 </br>
 
@@ -613,9 +612,9 @@ If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And 
 
 </br>
 
-✨ **Reason 2 :-**  The kind of data structures that OpenSearch uses --> Inverted Indices
+--
 
-</br>
+#### ✨ **Reason 3 :-**  The kind of data structures that OpenSearch uses --> Inverted Indices
 
 > Whenever we're integrating any specific components into our architecture, it's essential to grasp the foundations -- that'll enable us to fine-tune configurations that improvise from a non-functional standpoint 👍
 
@@ -635,19 +634,53 @@ What do I mean when I say "The document is indexed"?
 
 </br>
 
+--
+
+#### ✨ **Reason 4:-** The schema-free design OS allows for
+
+This is something that sets OS apart from it's traditional RDB counterparts.
+
+I'll go a bit deeper here --> traditional dbs require you to define a schema first, before we start inserting data into it. This would include, the structure, the type of data fields, so on and so forth.
+
+</br>
+
+> This means changing the structure of the schema later or evolving the data model would be way disruptive, not recommended
+
+</br>
+
+Okay, so where does Opensearch score brownie points over these rdbs?
+
+A --> Point 1, Opensearch auto-detects the type of field from the first document it encounters. For instance, if it comes across, a field containing something like "2024-05-01", it'll be mapped a date . technical term:- Dynamic Field Mapping 👍    
+
+B --> Point 2, For folks who need flexibility, as far as the data modelling is concerned, it does provide with ample flexibility in the kind of documents that can be indexed. It'll auto-update the the index, this means it'll accomodate any new fields, and accordingly update the index. More on this below 👇
+
+</br>
+
+> A quick side note :- Our current use-case, wherein we're extracting data from a telemetry CSV, neither so we need a Glue crawler to automatically update the schema definitions, nor do we need a schema to be generated on the fly, (As of now, we do not have a continuously evolving schema.) But yes, this pointer stays relevant for teams building out log analytic solutions or similar scenarios.
 
 
+> **The scenario/ considerations the team would make before going with the "Schema-on-fly" concept in Opensearch?**
+> 
+> → Team would then have to weigh in if they're working in a very agile development environment where requirements change too often,            
+> → Second, if they're aiming for ease of use, in cases where the schema hasn't been fully defined upfront            
+> → Or if they're dealing with heteogenous types of dta streamed in from a wide variety of sources            
+>
+> However, I feel that it'll be necessary to weigh in the potential repurcussions on performance/ query complexity issues, and would be advisable to define explicit schemas, as and when it's possible.
+> 
 
 
+</br>
 
 #### OpenSearch from an NF standpoint:-
 
-➥ we've chosen a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
+➥ **we've chosen a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc.** In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, **we need to opt for an instance specifically from the c5/ c6 family.**
 
-➥ Scalability plus fault-tolerance ingrained -->  We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus HA - high availability, and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
+➥ Scalability plus fault-tolerance ingrained -->  **We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus incorporates high availability** and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
 
-➥ We've made it a point, to have an array of security considerations made,  to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, 
+➥ **We've made it a point, to have an array of security considerations made**,  to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, 
 
+
+</br>
 
 ## Wrapping it Up
 
