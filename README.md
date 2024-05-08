@@ -601,20 +601,22 @@ If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And 
 
 </br>
 
-> Okay, so these operations are really lightweight. We're balancing out the performance and resource utilisation in a way, that our serach operations aren't affected 👍
+> Okay, so these operations are really lightweight. We're balancing out the performance and resource utilisation aspects in a way, that such backend activities do not hamper our search operations in any way 👍
 
 </br>
 
-📌 
+📌 One thing I'd like to highlight here:- If you're striving to amp up on performance, do not accumulate your data in large batches. That's what OS does, It merges small segments into larger ones. Two reasons to support this:- One, we're keeping up with the latency here, as I've mentioned previously as well, newly indexed data would be quickly available or rather searchable for the users. The second point is that, we're reducing the number of segments, the search operations need to scan from = Better performance 👍
 
+</br>
 
+> Our key takeaway here --> The key design element here was :- How we'd manage Fast data availability (data freshness) with resource consumption (without overloading the system with too many disk writes)
 
 </br>
 
 
 #### OpenSearch from an NF standpoint:-
 
-➥ we've chosen for a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
+➥ we've chosen a compute - optimised instance type --> Our application is geared towards heavy computation - based workload, as in the flink code comprises complex aggregations, queries, etc. In such a scenario, when you're having stateful computations, that too, on data that's being freshly streamed in, we need to opt for an instance specifically from the c5,/ c6 family.
 
 ➥ Scalability plus fault-tolerance ingrained -->  We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus HA - high availability, and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
 
