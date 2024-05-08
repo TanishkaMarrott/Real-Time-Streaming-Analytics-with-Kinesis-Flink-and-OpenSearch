@@ -576,18 +576,36 @@ If we'd be using RDBs, the only option we'd have would be Vertical Scaling, And 
 
 ✨ **Reason 2 :-**  Specifically, **something we've focussing on :- Near-Real-Time processing - NRT Processing**
 
-OS has an ultra-low latency between the time document is indexed and the time it becomes searchable -- 
 
 </br>
 
-> That's what real-time analytics is all about. --> As soon as data is sent to Opensearch, it should be almost immediately available for querying. I'll explain how OS achieves this
+> That's what real-time analytics is all about. --> As soon as data is sent to Opensearch, _it should be almost immediately available for querying._ I'll explain how it achieves this
 
 </br>
 
-I'll give a quick brief as to what an NRT architecture looks like-->
+#### How is Near-Real-Time-Processing actually performed by OpenSearch? 
 
-📌 Just as the new documents are in indexed, they're first stored in an in-memory buffer
+</br>
 
+> The core objective or rather the overarching goal of NRT processing is minimizing the latency between ingestion (the time it's indexed) and searchability (the time this data is ready/visible to search queries.)
+>
+>  This is a super-important availability metric whenever we're designing/ dealing with such real-time analytic solutions.  
+
+</br>
+
+📌 First things first, the documents would initially be stored in an in-memory buffer in one of the nodes, --> the index-writer part of OpenSearch
+
+📌 OS would then periodically commit these buffered documents to the disk for storage purposes ➡️ However, it'll first create an inverted index out of this buffered document - We'll call this a _segment_ moving forward
+
+📌 If we're cognizant of the fact, that freshly indexed documents should be immediately visible to search queries, we need to set a very minimal refrsh interval, In this case, the dafault interval is 1 s, --> This means that OS would refresh its search indices every 1 second --> Such that newly indexed data would be available/ visible to our serach queries.
+
+</br>
+
+> Okay, so these operations are really lightweight. We're balancing out the performance and resource utilisation in a way, that our serach operations aren't affected 👍
+
+</br>
+
+📌 
 
 
 
