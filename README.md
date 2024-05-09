@@ -677,10 +677,25 @@ B --> Point 2, For folks who need flexibility, as far as the data modelling is c
 
 ➥ Scalability plus fault-tolerance ingrained -->  **We're having two nodes in the OpenSearch Cluster. Aids in both fault-tolerance capabilities, plus incorporates high availability** and a better workload distribution, in  case we're having a huge volume of influx of processed data from Flink. 
 
-➥ **We've made it a point, to have an array of security considerations made**,  to encrypt data in motion, as well as in-setu., We've added node-to-node encryption --> helps ensure the data integrity and authenticity of node to node communication, 
+➥ **We've made it a point, to have an array of security considerations implemented**:-
 
+W'll quickly summarise these:-
+
+1 - We've implemented node-to-node encryption, plus encryption at rest. This means we're prevnting inadvertent data loss, and also preventing data from being intercepted  --> preventing unauthorized access. Both data at rest and in transit have been secured 👍
+
+2 - When I say, Advanced Security Options has been enabled, --> it means that we're not relying on some external third party user managemenet service, We'll utilise Opensearch's in-built user auth + management features, This means that I'll not be relying on typical enterprise auth systems / identity providers like LDAP or Active directory., Instead, it'll be more of a standalone OS cluster --> a simplified setup, wherein usre would be created / managed / authenticated within the OS dashboard itslef.
 
 </br>
+
+> I'll take it up with a quick example, Let's assume we've got a scenario, wherein the OS cluster backs a product analytics dashboard, we can then create specific user accounts for different teams, with specific permissions / roles, as the case may be. Long story short, this is a standalone auth system, without inetgrating any external IdPs 💡
+>
+> 
+
+</br>
+
+3 - 
+
+
 
 ## Wrapping it Up
 
