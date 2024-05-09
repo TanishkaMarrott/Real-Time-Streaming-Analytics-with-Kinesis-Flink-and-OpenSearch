@@ -679,23 +679,23 @@ B --> Point 2, For folks who need flexibility, as far as the data modelling is c
 
 ➥ **We've made it a point, to have an array of security considerations implemented**:-
 
-W'll quickly summarise these:-
+We'll quickly summarise these:-
 
 1 - We've implemented node-to-node encryption, plus encryption at rest. This means we're prevnting inadvertent data loss, and also preventing data from being intercepted  --> preventing unauthorized access. Both data at rest and in transit have been secured 👍
 
-2 - When I say, Advanced Security Options has been enabled, --> it means that we're not relying on some external third party user managemenet service, We'll utilise Opensearch's in-built user auth + management features, This means that I'll not be relying on typical enterprise auth systems / identity providers like LDAP or Active directory., Instead, it'll be more of a standalone OS cluster --> a simplified setup, wherein usre would be created / managed / authenticated within the OS dashboard itslef.
+2 - Plus, the root user / master user, as it's called in OS, has its credentials securley pulled from the AWS Secrets manager. So, we're securing teh root user against any privilege escalation. We've enforced HTTPS to secure the interactions/ communications between clients and OS cluster
+
+3 - When I say, Advanced Security Options has been enabled, --> it means that we're not relying on some external third party user managemenet service, We'll utilise Opensearch's in-built user auth + management features, This means that I'll not be relying on typical enterprise auth systems / identity providers like LDAP or Active directory., Instead, it'll be more of a standalone OS cluster --> a simplified setup, wherein usre would be created / managed / authenticated within the OS dashboard itslef.
 
 </br>
 
 > I'll take it up with a quick example, Let's assume we've got a scenario, wherein the OS cluster backs a product analytics dashboard, we can then create specific user accounts for different teams, with specific permissions / roles, as the case may be. Long story short, this is a standalone auth system, without inetgrating any external IdPs 💡
->
-> 
 
 </br>
 
-3 - 
+Sample visualisation:-
 
-
+<img width="610" alt="image" src="https://github.com/TanishkaMarrott/Real-Time-Streaming-Analytics-with-Kinesis-Flink-and-OpenSearch/assets/78227704/a149c51b-3999-48d6-a488-8fbe23985612">
 
 ## Wrapping it Up
 
