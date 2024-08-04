@@ -88,7 +88,7 @@ Will continue to monitor metrics and then optimize on / fine-tune the paramaters
 
 We had to quickly transform our approach.      
 
-📌 **We anyhow wanted to get a fully asynchronuos workflow for sending data to Kinesis**. 
+📌 **We anyhow wanted to get a fully asynchronous workflow for sending data to Kinesis**. 
 
  </br>
  
@@ -100,7 +100,7 @@ We had to quickly transform our approach.
 
 </br>   
 
-> Okay, so what I mean here, is that CombineFuture extends our concept of Future here, CombineFuture does support dependent operations --> like the actions that trigger upon future's completion.  But without blocking the thread (example, thenApply())
+> Okay, so what I mean here, is that `CompletableFuture` extends our concept of Future here, `CompletableFuture`does support dependent operations --> like the actions that trigger upon future's completion.  But without blocking the thread (example, thenApply())
 
 </br>   
 
